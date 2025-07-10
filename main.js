@@ -121,6 +121,34 @@ async function fetchData() {
       }
     }
   });
+ // 📊 Finanzkennzahlen berechnen
+  const lastEquity = equity[equity.length - 1] || 0;
+  const firstEquity = equity[0] || 0;
+  const weeklyProfit = lastEquity - firstEquity;
+  const maxDrawdown = Math.max(...drawdown);
+  const maxDrawdownAbsolute = (maxDrawdown / 100) * lastEquity;
+
+  const stats = [
+    ["Aktueller Equity", `${lastEquity.toFixed(2)} €`],
+    ["Gewinn letzte Woche", `${weeklyProfit.toFixed(2)} €`],
+    ["Maximaler Drawdown (%)", `${maxDrawdown.toFixed(2)} %`],
+    ["Maximaler Drawdown (absolut)", `${maxDrawdownAbsolute.toFixed(2)} €`]
+  ];
+
+  const statsBody = document.getElementById("stats-body");
+  statsBody.innerHTML = ""; // Vorherige Einträge löschen
+
+  for (const [label, value] of stats) {
+    const row = document.createElement("tr");
+    const cell1 = document.createElement("td");
+    const cell2 = document.createElement("td");
+    cell1.textContent = label;
+    cell2.textContent = value;
+    cell2.style.textAlign = "right";
+    row.appendChild(cell1);
+    row.appendChild(cell2);
+    statsBody.appendChild(row);
+  }
 }
 
 fetchData();
