@@ -1,32 +1,38 @@
 console.log("📡 main.js geladen");
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
+
+// Modulpfade direkt von Firebase CDN
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
+// 🔑 Deine Firebase Konfiguration
 const firebaseConfig = {
   apiKey: "AIzaSyC1cqUCWwACeFYFFZ7MyIOweamKZ8PnNKU",
   authDomain: "ea-dashboard-636cf.firebaseapp.com",
-  databaseURL: "https://ea-dashboard-636cf-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "ea-dashboard-636cf",
-  storageBucket: "ea-dashboard-636cf.firebasestorage.app",
+  storageBucket: "ea-dashboard-636cf.appspot.com",
   messagingSenderId: "602990579998",
   appId: "1:602990579998:web:c6775bcae19a8afba5b90f"
 };
 
-// Initialize Firebase
+// Firebase initialisieren
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔍 Beispiel: Alle Dokumente aus 'ea_monitoring' lesen
+// Daten abrufen und anzeigen
 async function fetchData() {
-  const snapshot = await getDocs(collection(db, "ea_monitoring"));
-  snapshot.forEach((doc) => {
-    console.log("📦 Eintrag:", doc.data());
-  });
+  try {
+    const snapshot = await getDocs(collection(db, "ea_monitoring"));
+    let html = "<ul>";
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      html += `<li>${data.timestamp}: ${data.symbol} – Equity: ${data.equity}</li>`;
+    });
+    html += "</ul>";
+    document.getElementById("output").innerHTML = html;
+  } catch (err) {
+    console.error("❌ Fehler beim Datenabruf:", err);
+    document.getElementById("output").innerText = "❌ Fehler beim Datenabruf.";
+  }
 }
 
 fetchData();
