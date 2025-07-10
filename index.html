@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="de">
-<head>
-  <meta charset="UTF-8" />
-  <title>EA Dashboard – Minimal</title>
-</head>
-<body>
-  <h1>📡 EA Monitoring Daten (Konsolenausgabe)</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <title>EA Dashboard</title>
+  </head>
+  <body>
+    <h1>📈 Equity Verlauf</h1>
+    <canvas id="chart" width="800" height="400"></canvas>
 
-  <p>Die Daten werden in der Dev-Konsole angezeigt (F12 drücken).</p>
+    <!-- Chart.js: UMD/IIFE-Version statt ES-Modul -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-  <!-- Lade das Hauptmodul -->
-  <script type="module" src="./main.js"></script>
-</body>
+    <!-- Dein eigenes Modul -->
+    <script type="module" src="main.js"></script>
+  </body>
 </html>
