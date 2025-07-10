@@ -121,22 +121,46 @@ async function fetchData() {
       }
     }
   });
- // 📊 Finanzkennzahlen berechnen
-  const lastEquity = equity[equity.length - 1] || 0;
+
+  // 📊 Finanzkennzahlen berechnen
   const firstEquity = equity[0] || 0;
-  const weeklyProfit = lastEquity - firstEquity;
+  const lastEquity = equity[equity.length - 1] || 0;
+  const firstBalance = balance[0] || 0;
+  const lastBalance = balance[balance.length - 1] || 0;
+
+  const profit = lastEquity - firstEquity;
+  const balanceGrowth = ((lastBalance - firstBalance) / firstBalance) * 100;
   const maxDrawdown = Math.max(...drawdown);
-  const maxDrawdownAbsolute = (maxDrawdown / 100) * lastEquity;
+  const maxDrawdownAbs = (maxDrawdown / 100) * lastEquity;
+  const recoveryFactor = maxDrawdownAbs > 0 ? profit / maxDrawdownAbs : "–";
+
+  // Sharpe Ratio (vereinfachte Form ohne risikofreien Zinssatz)
+  const returns = equity.slice(1).map((e, i) => e - equity[i]);
+  const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
+  const stdDev = Math.sqrt(
+    returns.map(r => (r - avgReturn) ** 2).reduce((a, b) => a + b, 0) / returns.length
+  );
+  const sharpeRatio = stdDev > 0 ? avgReturn / stdDev : "–";
+
+  // Profit Factor (Summe Gewinne / Summe Verluste)
+  const gains = returns.filter(r => r > 0).reduce((a, b) => a + b, 0);
+  const losses = returns.filter(r => r < 0).reduce((a, b) => a + b, 0);
+  const profitFactor = losses < 0 ? gains / Math.abs(losses) : "–";
 
   const stats = [
+    ["Aktuelle Balance", `${lastBalance.toFixed(2)} €`],
+    ["Balance-Wachstum", `${balanceGrowth.toFixed(2)} %`],
     ["Aktueller Equity", `${lastEquity.toFixed(2)} €`],
-    ["Gewinn letzte Woche", `${weeklyProfit.toFixed(2)} €`],
+    ["Gewinn seit Start", `${profit.toFixed(2)} €`],
     ["Maximaler Drawdown (%)", `${maxDrawdown.toFixed(2)} %`],
-    ["Maximaler Drawdown (absolut)", `${maxDrawdownAbsolute.toFixed(2)} €`]
+    ["Maximaler Drawdown (absolut)", `${maxDrawdownAbs.toFixed(2)} €`],
+    ["Recovery Factor", typeof recoveryFactor === "number" ? recoveryFactor.toFixed(2) : recoveryFactor],
+    ["Sharpe Ratio", typeof sharpeRatio === "number" ? sharpeRatio.toFixed(2) : sharpeRatio],
+    ["Profit Factor", typeof profitFactor === "number" ? profitFactor.toFixed(2) : profitFactor]
   ];
 
   const statsBody = document.getElementById("stats-body");
-  statsBody.innerHTML = ""; // Vorherige Einträge löschen
+  statsBody.innerHTML = "";
 
   for (const [label, value] of stats) {
     const row = document.createElement("tr");
