@@ -1,22 +1,20 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>EA Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module" src="main.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-    }
-    canvas {
-      max-width: 800px;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EA Monitoring Dashboard</title>
 </head>
 <body>
-  <h1>📊 EA Dashboard</h1>
-  <canvas id="equityChart"></canvas>
+  <h1>📊 EA Monitoring Dashboard</h1>
+
+  <!-- Canvas für Chart.js -->
+  <canvas id="equityChart" width="800" height="400"></canvas>
+
+  <!-- Chart.js von CDN laden -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Dein Haupt-JavaScript als Modul -->
+  <script type="module" src="main.js"></script>
 </body>
 </html>
