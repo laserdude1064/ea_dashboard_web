@@ -1,8 +1,13 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import Chart from "https://cdn.skypack.dev/chart.js";
+
+// Chart.js aus Skypack als ES-Modul importieren
+import { Chart, registerables } from "https://cdn.skypack.dev/chart.js";
 
 console.log("📡 main.js geladen");
+
+// 1️⃣ Chart.js-Registrierung
+Chart.register(...registerables);
 
 const firebaseConfig = {
   apiKey: "AIzaSyC1cqUCWwACeFYFFZ7MyIOweamKZ8PnNKU",
@@ -24,14 +29,22 @@ async function fetchData() {
 
   snapshot.forEach((doc) => {
     const d = doc.data();
-    if (d.timestamp && d.equity) {
+    if (d.timestamp && d.equity !== undefined) {
       timestamps.push(d.timestamp);
       equity.push(d.equity);
       console.log("📦 Eintrag: ", d);
     }
   });
 
-  const ctx = document.getElementById("chart").getContext("2d");
+  // 2️⃣ Canvas-Element abrufen
+  const canvas = document.getElementById("chart");
+  if (!canvas) {
+    console.error("❌ Kein <canvas id='chart'> gefunden!");
+    return;
+  }
+  const ctx = canvas.getContext("2d");
+
+  // 3️⃣ Chart erzeugen
   new Chart(ctx, {
     type: "line",
     data: {
@@ -43,6 +56,26 @@ async function fetchData() {
         tension: 0.1,
         fill: false
       }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: "Equity-Verlauf"
+        },
+        legend: {
+          display: true
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: "Timestamp" }
+        },
+        y: {
+          title: { display: true, text: "Equity (€)" }
+        }
+      }
     }
   });
 }
