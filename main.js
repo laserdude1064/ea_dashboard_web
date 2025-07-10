@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import Chart from "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.min.mjs"; // <-- ES-Modul Version
+import Chart from "https://cdn.skypack.dev/chart.js";
 
 console.log("📡 main.js geladen");
 
