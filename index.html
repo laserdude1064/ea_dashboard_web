@@ -10,7 +10,18 @@
 
     <!-- Chart.js: UMD/IIFE-Version statt ES-Modul -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
+    <!-- Tabelle für Finanzdaten -->
+    <table id="stats-table" border="1" style="margin-top: 30px; width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th style="text-align: left;">Kennzahl</th>
+          <th style="text-align: right;">Wert</th>
+        </tr>
+      </thead>
+      <tbody id="stats-body">
+        <!-- Wird dynamisch befüllt -->
+      </tbody>
+    </table>
     <!-- Dein eigenes Modul -->
     <script type="module" src="main.js"></script>
   </body>
