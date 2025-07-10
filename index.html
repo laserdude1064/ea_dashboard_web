@@ -6,10 +6,12 @@
   <title>EA Dashboard</title>
 </head>
 <body>
-  <h1>📊 EA Monitoring Dashboard</h1>
-  <div id="output"></div>
+  <h1>📊 EA-Dashboard</h1>
+  <canvas id="chart" width="800" height="400"></canvas>
 
-  <!-- Module-Import beachten -->
-  <script type="module" src="./main.js"></script>
+  <!-- Chart.js-Core (für Nicht-ESM-Module) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lade dein Modul: main.js -->
+  <script type="module" src="main.js"></script>
 </body>
 </html>
