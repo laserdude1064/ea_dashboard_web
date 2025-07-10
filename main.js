@@ -1,6 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import Chart from "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js";
 
 console.log("📡 main.js geladen");
 
@@ -33,7 +32,7 @@ async function fetchData() {
     }
   });
 
-  // Nach Timestamp sortieren (lexikalisch, da Format: "YYYY.MM.DD HH:MM")
+  // Sortiere nach Timestamp
   dataList.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 
   const timestamps = dataList.map(d => d.timestamp);
@@ -41,6 +40,7 @@ async function fetchData() {
   const balance = dataList.map(d => d.balance);
 
   const ctx = document.getElementById("chart").getContext("2d");
+
   new Chart(ctx, {
     type: "line",
     data: {
