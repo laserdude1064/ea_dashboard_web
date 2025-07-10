@@ -23,51 +23,70 @@ async function fetchData() {
 
   snapshot.forEach((doc) => {
     const d = doc.data();
-    if (d.timestamp && d.equity && d.balance) {
+    if (d.timestamp && d.equity && d.balance && d.drawdown !== undefined) {
       dataList.push({
         timestamp: d.timestamp,
         equity: d.equity,
-        balance: d.balance
+        balance: d.balance,
+        drawdown: d.drawdown
       });
     }
   });
 
-  // Sortiere nach Timestamp
+  // Sortieren nach Timestamp
   dataList.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 
   const timestamps = dataList.map(d => d.timestamp);
   const equity = dataList.map(d => d.equity);
   const balance = dataList.map(d => d.balance);
+  const drawdown = dataList.map(d => d.drawdown);
 
   const ctx = document.getElementById("chart").getContext("2d");
 
   new Chart(ctx, {
-    type: "line",
+    type: "bar", // Basis-Typ: bar, für Mischdiagramme
     data: {
       labels: timestamps,
       datasets: [
         {
+          type: "line",
           label: "Equity",
           data: equity,
           borderColor: "rgb(75, 192, 192)",
           tension: 0.1,
+          yAxisID: "y",
           fill: false
         },
         {
+          type: "line",
           label: "Balance",
           data: balance,
           borderColor: "rgb(192, 75, 192)",
           tension: 0.1,
+          yAxisID: "y",
           fill: false
+        },
+        {
+          type: "bar",
+          label: "Drawdown (%)",
+          data: drawdown,
+          backgroundColor: "rgba(255, 99, 132, 0.5)",
+          borderColor: "rgb(255, 99, 132)",
+          borderWidth: 1,
+          yAxisID: "y1"
         }
       ]
     },
     options: {
       responsive: true,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
       plugins: {
         title: {
           display: true,
-          text: 'Equity & Balance Verlauf'
+          text: 'Equity, Balance & Drawdown'
         },
         legend: {
           position: 'top'
@@ -75,9 +94,22 @@ async function fetchData() {
       },
       scales: {
         y: {
+          type: 'linear',
+          position: 'left',
           title: {
             display: true,
             text: 'Kontostand'
+          }
+        },
+        y1: {
+          type: 'linear',
+          position: 'right',
+          grid: {
+            drawOnChartArea: false
+          },
+          title: {
+            display: true,
+            text: 'Drawdown (%)'
           }
         },
         x: {
