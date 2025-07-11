@@ -174,5 +174,82 @@ async function fetchData() {
     statsBody.appendChild(row);
   }
 }
+// ============================================
+// 🆕 Historische Trades anzeigen (Balancechart)
+// ============================================
+async function fetchTradeHistory() {
+  console.log("📦 Lade Daten aus 'ea_trades'...");
 
+  const snapshot = await getDocs(collection(db, "ea_trades"));
+  const tradeList = [];
+
+  snapshot.forEach((doc) => {
+    const d = doc.data();
+    if (d.time && typeof d.profit === "number") {
+      tradeList.push({
+        time: d.time,
+        profit: d.profit
+      });
+    }
+  });
+
+  tradeList.sort((a, b) => a.time.localeCompare(b.time));
+
+  let cumulativeBalance = 0;
+  const timestamps = [];
+  const balanceSeries = [];
+
+  tradeList.forEach((trade) => {
+    cumulativeBalance += trade.profit;
+    timestamps.push(trade.time);
+    balanceSeries.push(cumulativeBalance);
+  });
+
+  const ctx2 = document.getElementById("chart-trades").getContext("2d");
+
+  new Chart(ctx2, {
+    type: "line",
+    data: {
+      labels: timestamps,
+      datasets: [
+        {
+          label: "Kumulierte Balance aus Trades",
+          data: balanceSeries,
+          borderColor: "rgb(54, 162, 235)",
+          fill: false,
+          tension: 0.1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: "Historische Trade-Balance (kumuliert)"
+        },
+        legend: {
+          position: 'top'
+        }
+      },
+      scales: {
+        y: {
+          title: {
+            display: true,
+            text: "Balance (kumuliert)"
+          }
+        },
+        x: {
+          title: {
+            display: true,
+            text: "Zeit"
+          }
+        }
+      }
+    }
+  });
+}
+
+// Beide Funktionen starten
 fetchData();
+fetchTradeHistory();
