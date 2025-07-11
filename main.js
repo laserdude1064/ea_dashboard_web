@@ -193,6 +193,99 @@ async function fetchTradeHistory() {
     }
   });
 
+  if (tradeList.length === 0) return;
+
+  // Alle Jahre extrahieren
+  const years = [...new Set(tradeList.map(t => new Date(t.time).getFullYear()))].sort();
+  const currentYear = new Date().getFullYear();
+
+  // Dropdown füllen
+  const yearFilter = document.getElementById("yearFilter");
+  yearFilter.innerHTML = "";
+  for (const y of years) {
+    const option = document.createElement("option");
+    option.value = y;
+    option.textContent = y;
+    if (y === currentYear) option.selected = true;
+    yearFilter.appendChild(option);
+  }
+
+  // Chart-Rendering-Funktion
+  let tradeChart = null;
+  function renderChartForYear(year) {
+    const filtered = tradeList.filter(t => new Date(t.time).getFullYear() === parseInt(year));
+
+    filtered.sort((a, b) => a.time.localeCompare(b.time));
+
+    let cumulativeBalance = 0;
+    const timestamps = [];
+    const balanceSeries = [];
+
+    filtered.forEach((trade) => {
+      cumulativeBalance += trade.profit;
+      timestamps.push(trade.time);
+      balanceSeries.push(cumulativeBalance);
+    });
+
+    const ctx2 = document.getElementById("chart-trades").getContext("2d");
+
+    if (tradeChart) {
+      tradeChart.destroy();
+    }
+
+    tradeChart = new Chart(ctx2, {
+      type: "line",
+      data: {
+        labels: timestamps,
+        datasets: [
+          {
+            label: `Kumulierte Balance – ${year}`,
+            data: balanceSeries,
+            borderColor: "rgb(54, 162, 235)",
+            fill: false,
+            tension: 0.1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: `Historische Trade-Balance (${year})`
+          },
+          legend: {
+            position: 'top'
+          }
+        },
+        scales: {
+          y: {
+            title: {
+              display: true,
+              text: "Balance (kumuliert)"
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: "Zeit"
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Initiales Rendering
+  renderChartForYear(currentYear);
+
+  // Reaktion auf Auswahländerung
+  yearFilter.addEventListener("change", (e) => {
+    renderChartForYear(e.target.value);
+  });
+}
+
+
   tradeList.sort((a, b) => a.time.localeCompare(b.time));
 
   let cumulativeBalance = 0;
