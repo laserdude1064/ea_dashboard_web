@@ -216,9 +216,7 @@ async function fetchTradeHistory() {
         renderChartForRange(selectedRange[0], selectedRange[1]);
       }
     },
-    plugins: [
-      new rangePlugin({ input: "#dateRange" })
-    ],
+
     locale: "de",
     altInput: true,
     altFormat: "d.m.Y",
