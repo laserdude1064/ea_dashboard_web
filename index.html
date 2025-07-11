@@ -3,17 +3,56 @@
   <head>
     <meta charset="UTF-8" />
     <title>EA Dashboard</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <!-- Flatpickr Styles & Script -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 30px;
+        background-color: #f8f9fa;
+      }
+      h1 {
+        margin-bottom: 1rem;
+      }
+      label {
+        display: block;
+        margin: 2rem 0 0.5rem;
+        font-weight: bold;
+      }
+      input[type="text"] {
+        padding: 0.5rem;
+        width: 250px;
+      }
+      canvas {
+        background: #fff;
+        padding: 10px;
+        border: 1px solid #ccc;
+        margin-bottom: 2rem;
+      }
+      table {
+        background: #fff;
+        border: 1px solid #ccc;
+      }
+      th, td {
+        padding: 10px;
+      }
+    </style>
   </head>
+
   <body>
     <h1>📈 Equity Verlauf</h1>
     <canvas id="chart" width="800" height="400"></canvas>
-  <label for="dateRange">Zeitraum wählen:</label>
-  <input id="dateRange" type="text" placeholder="Zeitraum auswählen…" style="margin-bottom: 1rem;"/>
-  <canvas id="chart-trades" width="800" height="400"></canvas>
 
-    <!-- Chart.js: UMD/IIFE-Version statt ES-Modul -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <!-- Tabelle für Finanzdaten -->
+    <label for="dateRange">Zeitraum wählen (Trades):</label>
+    <input id="dateRange" type="text" placeholder="Zeitraum auswählen…" />
+    <canvas id="chart-trades" width="800" height="400"></canvas>
+
     <table id="stats-table" border="1" style="margin-top: 30px; width: 100%; border-collapse: collapse;">
       <thead>
         <tr>
@@ -22,10 +61,11 @@
         </tr>
       </thead>
       <tbody id="stats-body">
-        <!-- Wird dynamisch befüllt -->
+        <!-- Dynamisch gefüllt -->
       </tbody>
     </table>
-    <!-- Dein eigenes Modul -->
+
+    <!-- Dein JavaScript-Modul -->
     <script type="module" src="main.js"></script>
   </body>
 </html>
