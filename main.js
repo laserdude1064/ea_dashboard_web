@@ -195,25 +195,36 @@ async function fetchTradeHistory() {
 
   if (tradeList.length === 0) return;
 
-  // Alle Jahre extrahieren
-  const years = [...new Set(tradeList.map(t => new Date(t.time).getFullYear()))].sort();
-  const currentYear = new Date().getFullYear();
+  // Parser: ISO-String → Date
+  const parseDate = (str) => new Date(str);
 
-  // Dropdown füllen
-  const yearFilter = document.getElementById("yearFilter");
-  yearFilter.innerHTML = "";
-  for (const y of years) {
-    const option = document.createElement("option");
-    option.value = y;
-    option.textContent = y;
-    if (y === currentYear) option.selected = true;
-    yearFilter.appendChild(option);
-  }
+  // Standardzeitraum: 1.1.2025 bis heute
+  const defaultStart = new Date("2025-01-01T00:00:00Z");
+  const defaultEnd = new Date();
+
+  // Initialisiere Flatpickr
+  const rangeInput = document.getElementById("dateRange");
+  let selectedRange = [defaultStart, defaultEnd];
+
+  flatpickr(rangeInput, {
+    mode: "range",
+    dateFormat: "Y-m-d",
+    defaultDate: selectedRange,
+    onChange: function (selectedDates) {
+      if (selectedDates.length === 2) {
+        selectedRange = selectedDates;
+        renderChartForRange(selectedRange[0], selectedRange[1]);
+      }
+    }
+  });
 
   // Chart-Rendering-Funktion
   let tradeChart = null;
-  function renderChartForYear(year) {
-    const filtered = tradeList.filter(t => new Date(t.time).getFullYear() === parseInt(year));
+  function renderChartForRange(startDate, endDate) {
+    const filtered = tradeList.filter(t => {
+      const tDate = parseDate(t.time);
+      return tDate >= startDate && tDate <= endDate;
+    });
 
     filtered.sort((a, b) => a.time.localeCompare(b.time));
 
@@ -229,9 +240,7 @@ async function fetchTradeHistory() {
 
     const ctx2 = document.getElementById("chart-trades").getContext("2d");
 
-    if (tradeChart) {
-      tradeChart.destroy();
-    }
+    if (tradeChart) tradeChart.destroy();
 
     tradeChart = new Chart(ctx2, {
       type: "line",
@@ -239,7 +248,7 @@ async function fetchTradeHistory() {
         labels: timestamps,
         datasets: [
           {
-            label: `Kumulierte Balance – ${year}`,
+            label: "Kumulierte Balance (Zeitraum)",
             data: balanceSeries,
             borderColor: "rgb(54, 162, 235)",
             fill: false,
@@ -252,7 +261,7 @@ async function fetchTradeHistory() {
         plugins: {
           title: {
             display: true,
-            text: `Historische Trade-Balance (${year})`
+            text: `Trades vom ${startDate.toISOString().split("T")[0]} bis ${endDate.toISOString().split("T")[0]}`
           },
           legend: {
             position: 'top'
@@ -276,72 +285,10 @@ async function fetchTradeHistory() {
     });
   }
 
-  // Initiales Rendering
-  renderChartForYear(currentYear);
-
-  // Reaktion auf Auswahländerung
-  yearFilter.addEventListener("change", (e) => {
-    renderChartForYear(e.target.value);
-  });
+  // Erstes Rendering mit Standardzeitraum
+  renderChartForRange(defaultStart, defaultEnd);
 }
 
-
-  tradeList.sort((a, b) => a.time.localeCompare(b.time));
-
-  let cumulativeBalance = 0;
-  const timestamps = [];
-  const balanceSeries = [];
-
-  tradeList.forEach((trade) => {
-    cumulativeBalance += trade.profit;
-    timestamps.push(trade.time);
-    balanceSeries.push(cumulativeBalance);
-  });
-
-  const ctx2 = document.getElementById("chart-trades").getContext("2d");
-
-  new Chart(ctx2, {
-    type: "line",
-    data: {
-      labels: timestamps,
-      datasets: [
-        {
-          label: "Kumulierte Balance aus Trades",
-          data: balanceSeries,
-          borderColor: "rgb(54, 162, 235)",
-          fill: false,
-          tension: 0.1
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        title: {
-          display: true,
-          text: "Historische Trade-Balance (kumuliert)"
-        },
-        legend: {
-          position: 'top'
-        }
-      },
-      scales: {
-        y: {
-          title: {
-            display: true,
-            text: "Balance (kumuliert)"
-          }
-        },
-        x: {
-          title: {
-            display: true,
-            text: "Zeit"
-          }
-        }
-      }
-    }
-  });
-}
 
 // Beide Funktionen starten
 fetchData();
