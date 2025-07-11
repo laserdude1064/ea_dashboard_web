@@ -15,6 +15,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+const statsMonitoringBody = document.querySelector("#stats-monitoring tbody");
+const statsTradesBody = document.querySelector("#stats-trades tbody");
+
 async function fetchData() {
   console.log("🔍 Lade Daten aus 'ea_monitoring'...");
 
@@ -122,7 +125,10 @@ async function fetchData() {
     }
   });
 
-  // 📊 Finanzkennzahlen berechnen
+  updateMonitoringStats(equity, balance, drawdown);
+}
+
+function updateMonitoringStats(equity, balance, drawdown) {
   const firstEquity = equity[0] || 0;
   const lastEquity = equity[equity.length - 1] || 0;
   const firstBalance = balance[0] || 0;
@@ -134,7 +140,6 @@ async function fetchData() {
   const maxDrawdownAbs = (maxDrawdown / 100) * lastEquity;
   const recoveryFactor = maxDrawdownAbs > 0 ? profit / maxDrawdownAbs : "–";
 
-  // Sharpe Ratio (vereinfachte Form ohne risikofreien Zinssatz)
   const returns = equity.slice(1).map((e, i) => e - equity[i]);
   const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
   const stdDev = Math.sqrt(
@@ -142,7 +147,6 @@ async function fetchData() {
   );
   const sharpeRatio = stdDev > 0 ? avgReturn / stdDev : "–";
 
-  // Profit Factor (Summe Gewinne / Summe Verluste)
   const gains = returns.filter(r => r > 0).reduce((a, b) => a + b, 0);
   const losses = returns.filter(r => r < 0).reduce((a, b) => a + b, 0);
   const profitFactor = losses < 0 ? gains / Math.abs(losses) : "–";
@@ -159,9 +163,7 @@ async function fetchData() {
     ["Profit Factor", typeof profitFactor === "number" ? profitFactor.toFixed(2) : profitFactor]
   ];
 
-  const statsBody = document.getElementById("stats-body");
-  statsBody.innerHTML = "";
-
+  statsMonitoringBody.innerHTML = "";
   for (const [label, value] of stats) {
     const row = document.createElement("tr");
     const cell1 = document.createElement("td");
@@ -171,12 +173,10 @@ async function fetchData() {
     cell2.style.textAlign = "right";
     row.appendChild(cell1);
     row.appendChild(cell2);
-    statsBody.appendChild(row);
+    statsMonitoringBody.appendChild(row);
   }
 }
-// ============================================
-// 🆕 Historische Trades anzeigen (Balancechart)
-// ============================================
+
 async function fetchTradeHistory() {
   console.log("📦 Lade Daten aus 'ea_trades'...");
 
@@ -195,14 +195,11 @@ async function fetchTradeHistory() {
 
   if (tradeList.length === 0) return;
 
-  // Parser: ISO-String → Date
   const parseDate = (str) => new Date(str);
 
-  // Standardzeitraum: 1.1.2025 bis heute
   const defaultStart = new Date("2025-01-01T00:00:00Z");
   const defaultEnd = new Date();
 
-  // Initialisiere Flatpickr
   const rangeInput = document.getElementById("dateRange");
   let selectedRange = [defaultStart, defaultEnd];
 
@@ -216,14 +213,12 @@ async function fetchTradeHistory() {
         renderChartForRange(selectedRange[0], selectedRange[1]);
       }
     },
-
     locale: "de",
     altInput: true,
     altFormat: "d.m.Y",
     static: true,
     shorthandCurrentMonth: true,
     disableMobile: true,
-    // 🆕 Presets manuell
     onReady: function (selectedDates, dateStr, instance) {
       const presets = [
         {
@@ -270,8 +265,6 @@ async function fetchTradeHistory() {
     }
   });
 
-
-  // Chart-Rendering-Funktion
   let tradeChart = null;
   function renderChartForRange(startDate, endDate) {
     const filtered = tradeList.filter(t => {
@@ -336,12 +329,58 @@ async function fetchTradeHistory() {
         }
       }
     });
+
+    updateTradeStats(filtered);
   }
 
-  // Erstes Rendering mit Standardzeitraum
   renderChartForRange(defaultStart, defaultEnd);
 }
 
+function updateTradeStats(filteredTrades) {
+  if (filteredTrades.length === 0) {
+    statsTradesBody.innerHTML = "<tr><td colspan='2' style='text-align:center'>Keine Trades im gewählten Zeitraum</td></tr>";
+    return;
+  }
+
+  let cumulativeBalance = 0;
+  const profits = [];
+  filteredTrades.forEach(t => {
+    cumulativeBalance += t.profit;
+    profits.push(t.profit);
+  });
+
+  const totalProfit = profits.reduce((a, b) => a + b, 0);
+  const avgProfit = totalProfit / profits.length;
+
+  const maxProfit = Math.max(...profits);
+  const minProfit = Math.min(...profits);
+
+  const wins = profits.filter(p => p > 0).length;
+  const losses = profits.filter(p => p <= 0).length;
+
+  const stats = [
+    ["Anzahl Trades", filteredTrades.length],
+    ["Gesamter Gewinn", totalProfit.toFixed(2) + " €"],
+    ["Durchschnittlicher Gewinn", avgProfit.toFixed(2) + " €"],
+    ["Maximaler Gewinn", maxProfit.toFixed(2) + " €"],
+    ["Maximaler Verlust", minProfit.toFixed(2) + " €"],
+    ["Gewonnene Trades", wins],
+    ["Verlorene Trades", losses],
+  ];
+
+  statsTradesBody.innerHTML = "";
+  for (const [label, value] of stats) {
+    const row = document.createElement("tr");
+    const cell1 = document.createElement("td");
+    const cell2 = document.createElement("td");
+    cell1.textContent = label;
+    cell2.textContent = value;
+    cell2.style.textAlign = "right";
+    row.appendChild(cell1);
+    row.appendChild(cell2);
+    statsTradesBody.appendChild(row);
+  }
+}
 
 // Beide Funktionen starten
 fetchData();
