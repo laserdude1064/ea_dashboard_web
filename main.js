@@ -335,7 +335,6 @@ async function fetchTradeHistory() {
 
   renderChartForRange(defaultStart, defaultEnd);
 }
-
 function updateTradeStats(filteredTrades) {
   if (filteredTrades.length === 0) {
     statsTradesBody.innerHTML = "<tr><td colspan='2' style='text-align:center'>Keine Trades im gewählten Zeitraum</td></tr>";
@@ -358,6 +357,35 @@ function updateTradeStats(filteredTrades) {
   const wins = profits.filter(p => p > 0).length;
   const losses = profits.filter(p => p <= 0).length;
 
+  // Recovery Factor: Gewinn seit Start / max Drawdown (Drawdown aus Profiten als negative Summe)
+  const maxDrawdown = (() => {
+    let peak = 0;
+    let drawdown = 0;
+    let maxDD = 0;
+    let running = 0;
+    profits.forEach(p => {
+      running += p;
+      if (running > peak) peak = running;
+      drawdown = peak - running;
+      if (drawdown > maxDD) maxDD = drawdown;
+    });
+    return maxDD;
+  })();
+  const recoveryFactor = maxDrawdown > 0 ? totalProfit / maxDrawdown : "–";
+
+  // Sharpe Ratio (vereinfachte Form, Gewinn pro Trade als Return)
+  const returns = profits;
+  const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
+  const stdDev = Math.sqrt(
+    returns.map(r => (r - avgReturn) ** 2).reduce((a, b) => a + b, 0) / returns.length
+  );
+  const sharpeRatio = stdDev > 0 ? avgReturn / stdDev : "–";
+
+  // Profit Factor (Summe Gewinne / Summe Verluste)
+  const gains = profits.filter(r => r > 0).reduce((a, b) => a + b, 0);
+  const lossesSum = profits.filter(r => r < 0).reduce((a, b) => a + b, 0);
+  const profitFactor = lossesSum < 0 ? gains / Math.abs(lossesSum) : "–";
+
   const stats = [
     ["Anzahl Trades", filteredTrades.length],
     ["Gesamter Gewinn", totalProfit.toFixed(2) + " €"],
@@ -366,6 +394,9 @@ function updateTradeStats(filteredTrades) {
     ["Maximaler Verlust", minProfit.toFixed(2) + " €"],
     ["Gewonnene Trades", wins],
     ["Verlorene Trades", losses],
+    ["Recovery Factor", typeof recoveryFactor === "number" ? recoveryFactor.toFixed(2) : recoveryFactor],
+    ["Sharpe Ratio", typeof sharpeRatio === "number" ? sharpeRatio.toFixed(2) : sharpeRatio],
+    ["Profit Factor", typeof profitFactor === "number" ? profitFactor.toFixed(2) : profitFactor]
   ];
 
   statsTradesBody.innerHTML = "";
@@ -381,6 +412,7 @@ function updateTradeStats(filteredTrades) {
     statsTradesBody.appendChild(row);
   }
 }
+
 
 // Beide Funktionen starten
 fetchData();
