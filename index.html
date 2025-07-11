@@ -17,30 +17,69 @@
         margin: 30px;
         background-color: #f8f9fa;
       }
+
       h1 {
         margin-bottom: 1rem;
       }
+
       label {
         display: block;
         margin: 2rem 0 0.5rem;
         font-weight: bold;
       }
+
+      .range-controls {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
       input[type="text"] {
         padding: 0.5rem;
-        width: 250px;
+        width: 220px;
       }
+
+      .preset-button {
+        padding: 0.4rem 0.8rem;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
+      .preset-button:hover {
+        background-color: #0056b3;
+      }
+
       canvas {
         background: #fff;
         padding: 10px;
         border: 1px solid #ccc;
         margin-bottom: 2rem;
       }
+
       table {
         background: #fff;
         border: 1px solid #ccc;
+        width: 100%;
+        border-collapse: collapse;
       }
+
       th, td {
         padding: 10px;
+        border: 1px solid #ccc;
+      }
+
+      th {
+        background-color: #f0f0f0;
+      }
+
+      td:last-child {
+        text-align: right;
       }
     </style>
   </head>
@@ -50,14 +89,22 @@
     <canvas id="chart" width="800" height="400"></canvas>
 
     <label for="dateRange">Zeitraum wählen (Trades):</label>
-    <input id="dateRange" type="text" placeholder="Zeitraum auswählen…" />
+    <div class="range-controls">
+      <input id="dateRange" type="text" placeholder="Zeitraum auswählen…" />
+
+      <button class="preset-button" id="btn-7d">Letzte 7 Tage</button>
+      <button class="preset-button" id="btn-30d">Letzte 30 Tage</button>
+      <button class="preset-button" id="btn-ytd">YTD</button>
+      <button class="preset-button" id="btn-all">Alle</button>
+    </div>
+
     <canvas id="chart-trades" width="800" height="400"></canvas>
 
-    <table id="stats-table" border="1" style="margin-top: 30px; width: 100%; border-collapse: collapse;">
+    <table id="stats-table" style="margin-top: 30px;">
       <thead>
         <tr>
-          <th style="text-align: left;">Kennzahl</th>
-          <th style="text-align: right;">Wert</th>
+          <th>Kennzahl</th>
+          <th>Wert</th>
         </tr>
       </thead>
       <tbody id="stats-body">
