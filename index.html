@@ -8,10 +8,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
     <!-- Flatpickr Styles & Script -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/de.js"></script>
-    
+
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -70,7 +70,8 @@
         border-collapse: collapse;
       }
 
-      th, td {
+      th,
+      td {
         padding: 10px;
         border: 1px solid #ccc;
       }
@@ -82,43 +83,83 @@
       td:last-child {
         text-align: right;
       }
+
+      /* Tab Buttons */
+      #tabs {
+        margin-bottom: 20px;
+      }
+
+      #tabs button {
+        padding: 0.6rem 1.2rem;
+        margin-right: 1rem;
+        font-size: 1rem;
+        cursor: pointer;
+        border: 1px solid #007bff;
+        background-color: #fff;
+        color: #007bff;
+        border-radius: 4px;
+        transition: background-color 0.2s, color 0.2s;
+      }
+
+      #tabs button.active,
+      #tabs button:hover {
+        background-color: #007bff;
+        color: white;
+      }
+
+      /* Tab Content Container */
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
     </style>
   </head>
 
   <body>
-    <h1>📈 Equity Verlauf</h1>
-    <canvas id="chart" width="800" height="400"></canvas>
-    <table id="stats-monitoring" border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse;">
-    <thead>
-      <tr>
-        <th style="text-align: left;">Kennzahl</th>
-        <th style="text-align: right;">Wert</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Wird dynamisch befüllt -->
-    </tbody>
-  </table>
-    
-    <label for="dateRange">Zeitraum wählen (Trades):</label>
-    <div class="range-controls">
-      <input id="dateRange" type="text" placeholder="Zeitraum auswählen…" />
-
+    <div id="tabs">
+      <button id="tab1-btn" class="active" type="button">Live-Daten</button>
+      <button id="tab2-btn" type="button">Historische Trades</button>
     </div>
 
-    <canvas id="chart-trades" width="800" height="400"></canvas>
+    <div id="tab1" class="tab-content active">
+      <h1>📈 Equity Verlauf</h1>
+      <canvas id="chart" width="800" height="400"></canvas>
+      <table id="stats-monitoring" border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th style="text-align: left;">Kennzahl</th>
+            <th style="text-align: right;">Wert</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Wird dynamisch befüllt -->
+        </tbody>
+      </table>
+    </div>
 
-    <table id="stats-trades" border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse;">
-    <thead>
-      <tr>
-        <th style="text-align: left;">Kennzahl</th>
-        <th style="text-align: right;">Wert</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Dynamisch gefüllt je nach Zeitraum -->
-    </tbody>
-  </table>
+    <div id="tab2" class="tab-content">
+      <label for="dateRange">Zeitraum wählen (Trades):</label>
+      <div class="range-controls">
+        <input id="dateRange" type="text" placeholder="Zeitraum auswählen…" />
+      </div>
+
+      <canvas id="chart-trades" width="800" height="400"></canvas>
+
+      <table id="stats-trades" border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th style="text-align: left;">Kennzahl</th>
+            <th style="text-align: right;">Wert</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Dynamisch gefüllt je nach Zeitraum -->
+        </tbody>
+      </table>
+    </div>
 
     <!-- Dein JavaScript-Modul -->
     <script type="module" src="main.js"></script>
