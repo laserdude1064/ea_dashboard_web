@@ -88,7 +88,18 @@
   <body>
     <h1>📈 Equity Verlauf</h1>
     <canvas id="chart" width="800" height="400"></canvas>
-
+    <table id="stats-monitoring" border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr>
+        <th style="text-align: left;">Kennzahl</th>
+        <th style="text-align: right;">Wert</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Wird dynamisch befüllt -->
+    </tbody>
+  </table>
+    
     <label for="dateRange">Zeitraum wählen (Trades):</label>
     <div class="range-controls">
       <input id="dateRange" type="text" placeholder="Zeitraum auswählen…" />
@@ -97,17 +108,17 @@
 
     <canvas id="chart-trades" width="800" height="400"></canvas>
 
-    <table id="stats-table" style="margin-top: 30px;">
-      <thead>
-        <tr>
-          <th>Kennzahl</th>
-          <th>Wert</th>
-        </tr>
-      </thead>
-      <tbody id="stats-body">
-        <!-- Dynamisch gefüllt -->
-      </tbody>
-    </table>
+    <table id="stats-trades" border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr>
+        <th style="text-align: left;">Kennzahl</th>
+        <th style="text-align: right;">Wert</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Dynamisch gefüllt je nach Zeitraum -->
+    </tbody>
+  </table>
 
     <!-- Dein JavaScript-Modul -->
     <script type="module" src="main.js"></script>
