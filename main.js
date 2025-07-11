@@ -417,3 +417,23 @@ function updateTradeStats(filteredTrades) {
 // Beide Funktionen starten
 fetchData();
 fetchTradeHistory();
+
+// Tabs Umschalten
+const tab1Btn = document.getElementById("tab1-btn");
+const tab2Btn = document.getElementById("tab2-btn");
+const tab1Content = document.getElementById("tab1");
+const tab2Content = document.getElementById("tab2");
+
+tab1Btn.addEventListener("click", () => {
+  tab1Btn.classList.add("active");
+  tab2Btn.classList.remove("active");
+  tab1Content.classList.add("active");
+  tab2Content.classList.remove("active");
+});
+
+tab2Btn.addEventListener("click", () => {
+  tab2Btn.classList.add("active");
+  tab1Btn.classList.remove("active");
+  tab2Content.classList.add("active");
+  tab1Content.classList.remove("active");
+});
