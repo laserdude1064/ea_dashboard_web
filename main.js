@@ -28,36 +28,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const statsMonitoringBody = document.querySelector("#stats-monitoring tbody");
   const statsTradesBody = document.querySelector("#stats-trades tbody");
 
-  // Login / Logout
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email = loginForm.email.value;
-    const password = loginForm.password.value;
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      loginForm.reset();
-    } catch (error) {
-      alert("Login fehlgeschlagen: " + error.message);
-    }
-  });
-
-  logoutButton.addEventListener("click", () => {
-    signOut(auth);
-  });
-
-  // Auth State beobachten
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      loginSection.style.display = "none";
-      contentSection.style.display = "block";
-      fetchData();
-      fetchTradeHistory();
-    } else {
-      loginSection.style.display = "block";
-      contentSection.style.display = "none";
-    }
-  });
-
   // Tab-Umschaltung
   const tab1Btn = document.getElementById("tab1-btn");
   const tab2Btn = document.getElementById("tab2-btn");
@@ -78,7 +48,41 @@ document.addEventListener("DOMContentLoaded", () => {
     tab1Content.classList.remove("active");
   });
 
-  // Login Funktion für HTML-Zugriff
+  // Login / Logout
+  if (loginForm) {
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = loginForm.email.value;
+      const password = loginForm.password.value;
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        loginForm.reset();
+      } catch (error) {
+        alert("Login fehlgeschlagen: " + error.message);
+      }
+    });
+  }
+
+  if (logoutButton) {
+    logoutButton.addEventListener("click", () => {
+      signOut(auth);
+    });
+  }
+
+  // Auth State beobachten
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      loginSection.style.display = "none";
+      contentSection.style.display = "block";
+      fetchData();
+      fetchTradeHistory();
+    } else {
+      loginSection.style.display = "block";
+      contentSection.style.display = "none";
+    }
+  });
+
+  // Login Funktion für HTML-Zugriff (wird derzeit nicht genutzt)
   window.login = async function () {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
@@ -89,7 +93,6 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("login-error").textContent = "❌ Login fehlgeschlagen: " + error.message;
     }
   };
-
   // ============ Monitoring-Daten laden ============
   async function fetchData() {
     console.log("🔍 Lade Daten aus 'ea_monitoring'...");
