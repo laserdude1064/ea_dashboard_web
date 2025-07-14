@@ -29,6 +29,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const statsTradesBody = document.querySelector("#stats-trades tbody");
 
   // Tab-Umschaltung
+  const tab1Btn = document.getElementById("tab1-btn");
+  const tab2Btn = document.getElementById("tab2-btn");
+  const tab1Content = document.getElementById("tab1");
+  const tab2Content = document.getElementById("tab2");
+  
   function showTab(tabNumber) {
     const tabs = document.querySelectorAll(".tab-content");
     const buttons = [tab1Btn, tab2Btn];
