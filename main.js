@@ -225,7 +225,7 @@ tab2Btn.addEventListener("click", () => showTab(2));
   }
 
   // ============ Trade-Daten laden ============
-  let tradeList = [];
+  
   async function fetchTradeHistory() {
     console.log("📦 Lade Daten aus 'ea_trades'...");
     const snapshot = await getDocs(collection(db, "ea_trades"));
@@ -259,7 +259,7 @@ tab2Btn.addEventListener("click", () => showTab(2));
     });
   renderChartForRange(defaultStart, defaultEnd);
   }
-  
+  let tradeList = [];
   let tradeChart = null;
   function renderChartForRange(startDate, endDate) {
     const filtered = tradeList
@@ -303,7 +303,7 @@ tab2Btn.addEventListener("click", () => showTab(2));
     });
 
     updateTradeStats(filtered);
-    updateMonthlyProfitTable(filtered);
+    updateMonthlyProfitTable(tradelist);
   }
   function updateTradeStats(trades) {
     if (trades.length === 0) {
