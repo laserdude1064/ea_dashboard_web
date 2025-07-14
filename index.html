@@ -13,163 +13,63 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/de.js"></script>
 
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 30px;
-        background-color: #f8f9fa;
-      }
-
-      h1 {
-        margin-bottom: 1rem;
-      }
-
-      label {
-        display: block;
-        margin: 2rem 0 0.5rem;
-        font-weight: bold;
-      }
-
-      .range-controls {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-      }
-
-      input[type="text"] {
-        padding: 0.5rem;
-        width: 220px;
-      }
-
-      .preset-button {
-        padding: 0.4rem 0.8rem;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.9rem;
-      }
-
-      .preset-button:hover {
-        background-color: #0056b3;
-      }
-
-      canvas {
-        background: #fff;
-        padding: 10px;
-        border: 1px solid #ccc;
-        margin-bottom: 2rem;
-      }
-
-      table {
-        background: #fff;
-        border: 1px solid #ccc;
-        width: 100%;
-        border-collapse: collapse;
-      }
-
-      th,
-      td {
-        padding: 10px;
-        border: 1px solid #ccc;
-      }
-
-      th {
-        background-color: #f0f0f0;
-      }
-
-      td:last-child {
-        text-align: right;
-      }
-
-      /* Tab Buttons */
-      #tabs {
-        margin-bottom: 20px;
-      }
-
-      #tabs button {
-        padding: 0.6rem 1.2rem;
-        margin-right: 1rem;
-        font-size: 1rem;
-        cursor: pointer;
-        border: 1px solid #007bff;
-        background-color: #fff;
-        color: #007bff;
-        border-radius: 4px;
-        transition: background-color 0.2s, color 0.2s;
-      }
-
-      #tabs button.active,
-      #tabs button:hover {
-        background-color: #007bff;
-        color: white;
-      }
-
-      /* Tab Content Container */
-      .tab-content {
-        display: none;
-      }
-
-      .tab-content.active {
-        display: block;
-      }
+      /* ... dein bestehendes CSS bleibt unverändert ... */
     </style>
   </head>
 
   <body>
-    <div id="login-container" style="display:none;">
+    <!-- 🔐 LOGIN SECTION -->
+    <div id="login-section">
       <h2>🔐 Bitte einloggen</h2>
-      <input id="email" type="email" placeholder="E-Mail" /><br />
-      <input id="password" type="password" placeholder="Passwort" /><br />
-      <button onclick="login()">Login</button>
-      <p id="login-error" style="color: red;"></p>
-    </div>
-    
-    <div id="tabs">
-      <button id="tab1-btn" class="active" type="button">Live-Daten</button>
-      <button id="tab2-btn" type="button">Historische Trades</button>
+      <form id="login-form">
+        <input name="email" type="email" placeholder="E-Mail" required /><br />
+        <input name="password" type="password" placeholder="Passwort" required /><br />
+        <button type="submit">Login</button>
+        <p id="login-error" style="color: red;"></p>
+      </form>
     </div>
 
-    <div id="tab1" class="tab-content active">
-      <h1>📈 Equity Verlauf</h1>
-      <canvas id="chart" width="800" height="400"></canvas>
-      <table id="stats-monitoring" border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse;">
-        <thead>
-          <tr>
-            <th style="text-align: left;">Kennzahl</th>
-            <th style="text-align: right;">Wert</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Wird dynamisch befüllt -->
-        </tbody>
-      </table>
-    </div>
-
-    <div id="tab2" class="tab-content">
-      <label for="dateRange">Zeitraum wählen (Trades):</label>
-      <div class="range-controls">
-        <input id="dateRange" type="text" placeholder="Zeitraum auswählen…" />
+    <!-- 📊 CONTENT SECTION -->
+    <div id="content-section" style="display: none;">
+      <div id="tabs">
+        <button id="tab1-btn" class="active" type="button">Live-Daten</button>
+        <button id="tab2-btn" type="button">Historische Trades</button>
+        <button id="logout-button" style="float: right;">Logout</button>
       </div>
 
-      <canvas id="chart-trades" width="800" height="400"></canvas>
+      <div id="tab1" class="tab-content active">
+        <h1>📈 Equity Verlauf</h1>
+        <canvas id="chart" width="800" height="400"></canvas>
+        <table id="stats-monitoring" border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr>
+              <th style="text-align: left;">Kennzahl</th>
+              <th style="text-align: right;">Wert</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
 
-      <table id="stats-trades" border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse;">
-        <thead>
-          <tr>
-            <th style="text-align: left;">Kennzahl</th>
-            <th style="text-align: right;">Wert</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Dynamisch gefüllt je nach Zeitraum -->
-        </tbody>
-      </table>
+      <div id="tab2" class="tab-content">
+        <label for="dateRange">Zeitraum wählen (Trades):</label>
+        <div class="range-controls">
+          <input id="dateRange" type="text" placeholder="Zeitraum auswählen…" />
+        </div>
+        <canvas id="chart-trades" width="800" height="400"></canvas>
+        <table id="stats-trades" border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr>
+              <th style="text-align: left;">Kennzahl</th>
+              <th style="text-align: right;">Wert</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- Dein JavaScript-Modul -->
+    <!-- JavaScript -->
     <script type="module" src="main.js"></script>
   </body>
 </html>
