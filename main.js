@@ -482,4 +482,4 @@ window.login = async function () {
   } catch (error) {
     document.getElementById("login-error").textContent = "❌ Login fehlgeschlagen: " + error.message;
   }
-};
+});
