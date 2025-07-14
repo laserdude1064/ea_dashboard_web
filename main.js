@@ -252,61 +252,58 @@ tab2Btn.addEventListener("click", () => showTab(2));
       locale: "de",
       onChange: (dates) => {
         if (dates.length === 2) {
-          renderChartForRange(dates[0], dates[1]);
+           renderChartForRange(dates[0], dates[1], tradeList);
+        }
+      }
+    });
+  renderChartForRange(defaultStart, defaultEnd, tradeList);
+  }
+  
+  let tradeChart = null;
+  function renderChartForRange(startDate, endDate, tradelist) {
+    const filtered = tradeList
+      .filter(t => new Date(t.time) >= startDate && new Date(t.time) <= endDate)
+      .sort((a, b) => a.time.localeCompare(b.time));
+
+    const timestamps = [];
+    const balances = [];
+    let cum = 0;
+
+    filtered.forEach(t => {
+      cum += t.profit;
+      timestamps.push(t.time);
+      balances.push(cum);
+    });
+
+    const ctx = document.getElementById("chart-trades").getContext("2d");
+    if (tradeChart) tradeChart.destroy();
+
+    tradeChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: timestamps,
+        datasets: [{
+          label: "Kumulierte Balance (Zeitraum)",
+          data: balances,
+          borderColor: "rgb(54, 162, 235)",
+          fill: false,
+          tension: 0.1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: `Trades vom ${startDate.toISOString().split("T")[0]} bis ${endDate.toISOString().split("T")[0]}`
+          }
         }
       }
     });
 
-    let tradeChart = null;
-
-    function renderChartForRange(startDate, endDate) {
-      const filtered = tradeList
-        .filter(t => new Date(t.time) >= startDate && new Date(t.time) <= endDate)
-        .sort((a, b) => a.time.localeCompare(b.time));
-
-      const timestamps = [];
-      const balances = [];
-      let cum = 0;
-
-      filtered.forEach(t => {
-        cum += t.profit;
-        timestamps.push(t.time);
-        balances.push(cum);
-      });
-
-      const ctx = document.getElementById("chart-trades").getContext("2d");
-      if (tradeChart) tradeChart.destroy();
-
-      tradeChart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: timestamps,
-          datasets: [{
-            label: "Kumulierte Balance (Zeitraum)",
-            data: balances,
-            borderColor: "rgb(54, 162, 235)",
-            fill: false,
-            tension: 0.1
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            title: {
-              display: true,
-              text: `Trades vom ${startDate.toISOString().split("T")[0]} bis ${endDate.toISOString().split("T")[0]}`
-            }
-          }
-        }
-      });
-
-      updateTradeStats(filtered);
-      updateMonthlyProfitTable(filtered);
-    }
-
-    renderChartForRange(defaultStart, defaultEnd);
+    updateTradeStats(filtered);
+    updateMonthlyProfitTable(filtered);
   }
-
   function updateTradeStats(trades) {
     if (trades.length === 0) {
       statsTradesBody.innerHTML = "<tr><td colspan='2' style='text-align:center'>Keine Trades im gewählten Zeitraum</td></tr>";
@@ -394,7 +391,7 @@ function updateMonthlyProfitTable(trades) {
         const m = parseInt(cell.dataset.month);
         const start = new Date(y, m, 1);
         const end = new Date(y, m + 1, 0, 23, 59, 59);
-        renderChartForRange(start, end);
+        renderChartForRange(dates[0], dates[1], tradeList);
       });
     });
   });
