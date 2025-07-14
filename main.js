@@ -381,20 +381,31 @@ tab2Btn.addEventListener("click", () => showTab(2));
         const profit = monthly[key] || 0;
         cells.push(`<td style="text-align:right; cursor:pointer;" data-year="${year}" data-month="${i}">${profit.toFixed(2)} €</td>`);
       }
-  
-      row.innerHTML = cells.join("");
-      tbody.appendChild(row);
-  
-      // Klick-Handler für jede Monatszelle
-      row.querySelectorAll("td[data-year]").forEach(cell => {
-        cell.addEventListener("click", () => {
-          const y = parseInt(cell.dataset.year);
-          const m = parseInt(cell.dataset.month);
-          const start = new Date(y, m, 1);
-          const end = new Date(y, m + 1, 0, 23, 59, 59);
-          renderChartForRange(start, end); 
-        });
+    row.innerHTML = cells.join("");
+    tbody.appendChild(row);
+    
+    // Klick-Handler für Monatszellen
+    row.querySelectorAll("td[data-year][data-month]").forEach(cell => {
+      cell.addEventListener("click", () => {
+        const y = parseInt(cell.dataset.year);
+        const m = parseInt(cell.dataset.month);
+        const start = new Date(y, m, 1);
+        const end = new Date(y, m + 1, 0, 23, 59, 59);
+        renderChartForRange(start, end);
       });
+    });
+    
+    // Klick-Handler für Jahreszelle
+    const yearCell = row.querySelector("td:first-child");
+    yearCell.style.cursor = "pointer";
+    yearCell.addEventListener("click", () => {
+      const y = parseInt(yearCell.textContent);
+      const start = new Date(y, 0, 1);
+      const end = new Date(y, 11, 31, 23, 59, 59);
+      renderChartForRange(start, end);
+    });
+
+
     });
   }
   
