@@ -303,7 +303,7 @@ tab2Btn.addEventListener("click", () => showTab(2));
     });
 
     updateTradeStats(filtered);
-    updateMonthlyProfitTable(tradelist);
+    updateMonthlyProfitTable(tradeList);
   }
   function updateTradeStats(trades) {
     if (trades.length === 0) {
