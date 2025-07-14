@@ -301,6 +301,7 @@ tab2Btn.addEventListener("click", () => showTab(2));
       });
 
       updateTradeStats(filtered);
+      updateMonthlyProfitTable(filtered);
     }
 
     renderChartForRange(defaultStart, defaultEnd);
@@ -355,4 +356,37 @@ tab2Btn.addEventListener("click", () => showTab(2));
       statsTradesBody.appendChild(row);
     }
   }
+  function updateMonthlyProfitTable(trades) {
+  // Map: Jahr => Array mit 12 Monatsgewinnen
+  const monthlyProfits = {};
+
+  trades.forEach(trade => {
+    const d = new Date(trade.time);
+    const year = d.getFullYear();
+    const month = d.getMonth(); // 0=Jan ... 11=Dez
+
+    if (!monthlyProfits[year]) {
+      monthlyProfits[year] = new Array(12).fill(0);
+    }
+
+    monthlyProfits[year][month] += trade.profit;
+  });
+
+  const tbody = document.querySelector("#monthly-profit tbody");
+  tbody.innerHTML = "";
+
+  // Für jede Jahr-Tabelle eine Zeile bauen
+  Object.keys(monthlyProfits).sort().forEach(year => {
+    const row = document.createElement("tr");
+    const cells = [`<td>${year}</td>`];
+
+    monthlyProfits[year].forEach(monatProfit => {
+      cells.push(`<td style="text-align:right">${monatProfit.toFixed(2)} €</td>`);
+    });
+
+    row.innerHTML = cells.join("");
+    tbody.appendChild(row);
+  });
+}
+
 });
