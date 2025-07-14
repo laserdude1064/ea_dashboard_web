@@ -437,3 +437,13 @@ tab2Btn.addEventListener("click", () => {
   tab2Content.classList.add("active");
   tab1Content.classList.remove("active");
 });
+window.login = async function () {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (error) {
+    document.getElementById("login-error").textContent = "❌ Login fehlgeschlagen: " + error.message;
+  }
+};
