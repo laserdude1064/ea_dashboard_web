@@ -1,10 +1,11 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 console.log("📡 main.js geladen");
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Firebase Setup
   const firebaseConfig = {
     apiKey: "AIzaSyC1cqUCWwACeFYFFZ7MyIOweamKZ8PnNKU",
     authDomain: "ea-dashboard-636cf.firebaseapp.com",
@@ -18,11 +19,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const db = getFirestore(app);
   const auth = getAuth(app);
 
+  // UI Elemente
   const loginForm = document.getElementById("login-form");
   const loginSection = document.getElementById("login-section");
   const contentSection = document.getElementById("content-section");
   const logoutButton = document.getElementById("logout-button");
 
+  const statsMonitoringBody = document.querySelector("#stats-monitoring tbody");
+  const statsTradesBody = document.querySelector("#stats-trades tbody");
+
+  // Login / Logout
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = loginForm.email.value;
@@ -39,6 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
     signOut(auth);
   });
 
+  // Auth State beobachten
   onAuthStateChanged(auth, (user) => {
     if (user) {
       loginSection.style.display = "none";
@@ -51,290 +58,88 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-const statsMonitoringBody = document.querySelector("#stats-monitoring tbody");
-const statsTradesBody = document.querySelector("#stats-trades tbody");
+  // Tab-Umschaltung
+  const tab1Btn = document.getElementById("tab1-btn");
+  const tab2Btn = document.getElementById("tab2-btn");
+  const tab1Content = document.getElementById("tab1");
+  const tab2Content = document.getElementById("tab2");
 
-async function fetchData() {
-  console.log("🔍 Lade Daten aus 'ea_monitoring'...");
-
-  const snapshot = await getDocs(collection(db, "ea_monitoring"));
-  const dataList = [];
-
-  snapshot.forEach((doc) => {
-    const d = doc.data();
-    if (d.timestamp && d.equity && d.balance && d.drawdown !== undefined) {
-      dataList.push({
-        timestamp: d.timestamp,
-        equity: d.equity,
-        balance: d.balance,
-        drawdown: d.drawdown
-      });
-    }
+  tab1Btn.addEventListener("click", () => {
+    tab1Btn.classList.add("active");
+    tab2Btn.classList.remove("active");
+    tab1Content.classList.add("active");
+    tab2Content.classList.remove("active");
   });
 
-  // Sortieren nach Timestamp
-  dataList.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+  tab2Btn.addEventListener("click", () => {
+    tab2Btn.classList.add("active");
+    tab1Btn.classList.remove("active");
+    tab2Content.classList.add("active");
+    tab1Content.classList.remove("active");
+  });
 
-  const timestamps = dataList.map(d => d.timestamp);
-  const equity = dataList.map(d => d.equity);
-  const balance = dataList.map(d => d.balance);
-  const drawdown = dataList.map(d => d.drawdown);
+  // Login Funktion für HTML-Zugriff
+  window.login = async function () {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
-  const ctx = document.getElementById("chart").getContext("2d");
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      document.getElementById("login-error").textContent = "❌ Login fehlgeschlagen: " + error.message;
+    }
+  };
 
-  new Chart(ctx, {
-    type: "bar", // Basis-Typ: bar, für Mischdiagramme
-    data: {
-      labels: timestamps,
-      datasets: [
-        {
-          type: "line",
-          label: "Equity",
-          data: equity,
-          borderColor: "rgb(75, 192, 192)",
-          tension: 0.1,
-          yAxisID: "y",
-          fill: false
-        },
-        {
-          type: "line",
-          label: "Balance",
-          data: balance,
-          borderColor: "rgb(192, 75, 192)",
-          tension: 0.1,
-          yAxisID: "y",
-          fill: false
-        },
-        {
-          type: "bar",
-          label: "Drawdown (%)",
-          data: drawdown,
-          backgroundColor: "rgba(255, 99, 132, 0.5)",
-          borderColor: "rgb(255, 99, 132)",
-          borderWidth: 1,
-          yAxisID: "y1"
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      interaction: {
-        mode: 'index',
-        intersect: false
-      },
-      plugins: {
-        title: {
-          display: true,
-          text: 'Equity, Balance & Drawdown'
-        },
-        legend: {
-          position: 'top'
-        }
-      },
-      scales: {
-        y: {
-          type: 'linear',
-          position: 'left',
-          title: {
-            display: true,
-            text: 'Kontostand'
-          }
-        },
-        y1: {
-          type: 'linear',
-          position: 'right',
-          grid: {
-            drawOnChartArea: false
-          },
-          title: {
-            display: true,
-            text: 'Drawdown (%)'
-          }
-        },
-        x: {
-          title: {
-            display: true,
-            text: 'Zeit'
-          }
-        }
+  // ============ Monitoring-Daten laden ============
+  async function fetchData() {
+    console.log("🔍 Lade Daten aus 'ea_monitoring'...");
+    const snapshot = await getDocs(collection(db, "ea_monitoring"));
+    const dataList = [];
+
+    snapshot.forEach((doc) => {
+      const d = doc.data();
+      if (d.timestamp && d.equity && d.balance && d.drawdown !== undefined) {
+        dataList.push(d);
       }
-    }
-  });
-
-  updateMonitoringStats(equity, balance, drawdown);
-}
-
-function updateMonitoringStats(equity, balance, drawdown) {
-  const firstEquity = equity[0] || 0;
-  const lastEquity = equity[equity.length - 1] || 0;
-  const firstBalance = balance[0] || 0;
-  const lastBalance = balance[balance.length - 1] || 0;
-
-  const profit = lastEquity - firstEquity;
-  const balanceGrowth = ((lastBalance - firstBalance) / firstBalance) * 100;
-  const maxDrawdown = Math.max(...drawdown);
-  const maxDrawdownAbs = (maxDrawdown / 100) * lastEquity;
-  const recoveryFactor = maxDrawdownAbs > 0 ? profit / maxDrawdownAbs : "–";
-
-  const returns = equity.slice(1).map((e, i) => e - equity[i]);
-  const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
-  const stdDev = Math.sqrt(
-    returns.map(r => (r - avgReturn) ** 2).reduce((a, b) => a + b, 0) / returns.length
-  );
-  const sharpeRatio = stdDev > 0 ? avgReturn / stdDev : "–";
-
-  const gains = returns.filter(r => r > 0).reduce((a, b) => a + b, 0);
-  const losses = returns.filter(r => r < 0).reduce((a, b) => a + b, 0);
-  const profitFactor = losses < 0 ? gains / Math.abs(losses) : "–";
-
-  const stats = [
-    ["Aktuelle Balance", `${lastBalance.toFixed(2)} €`],
-    ["Balance-Wachstum", `${balanceGrowth.toFixed(2)} %`],
-    ["Aktueller Equity", `${lastEquity.toFixed(2)} €`],
-    ["Gewinn seit Start", `${profit.toFixed(2)} €`],
-    ["Maximaler Drawdown (%)", `${maxDrawdown.toFixed(2)} %`],
-    ["Maximaler Drawdown (absolut)", `${maxDrawdownAbs.toFixed(2)} €`],
-    ["Recovery Factor", typeof recoveryFactor === "number" ? recoveryFactor.toFixed(2) : recoveryFactor],
-    ["Sharpe Ratio", typeof sharpeRatio === "number" ? sharpeRatio.toFixed(2) : sharpeRatio],
-    ["Profit Factor", typeof profitFactor === "number" ? profitFactor.toFixed(2) : profitFactor]
-  ];
-
-  statsMonitoringBody.innerHTML = "";
-  for (const [label, value] of stats) {
-    const row = document.createElement("tr");
-    const cell1 = document.createElement("td");
-    const cell2 = document.createElement("td");
-    cell1.textContent = label;
-    cell2.textContent = value;
-    cell2.style.textAlign = "right";
-    row.appendChild(cell1);
-    row.appendChild(cell2);
-    statsMonitoringBody.appendChild(row);
-  }
-}
-
-async function fetchTradeHistory() {
-  console.log("📦 Lade Daten aus 'ea_trades'...");
-
-  const snapshot = await getDocs(collection(db, "ea_trades"));
-  const tradeList = [];
-
-  snapshot.forEach((doc) => {
-    const d = doc.data();
-    if (d.time && typeof d.profit === "number") {
-      tradeList.push({
-        time: d.time,
-        profit: d.profit
-      });
-    }
-  });
-
-  if (tradeList.length === 0) return;
-
-  const parseDate = (str) => new Date(str);
-
-  const defaultStart = new Date("2025-01-01T00:00:00Z");
-  const defaultEnd = new Date();
-
-  const rangeInput = document.getElementById("dateRange");
-  let selectedRange = [defaultStart, defaultEnd];
-
-  flatpickr(rangeInput, {
-    mode: "range",
-    dateFormat: "Y-m-d",
-    defaultDate: selectedRange,
-    onChange: function (selectedDates) {
-      if (selectedDates.length === 2) {
-        selectedRange = selectedDates;
-        renderChartForRange(selectedRange[0], selectedRange[1]);
-      }
-    },
-    locale: "de",
-    altInput: true,
-    altFormat: "d.m.Y",
-    static: true,
-    shorthandCurrentMonth: true,
-    disableMobile: true,
-    onReady: function (selectedDates, dateStr, instance) {
-      const presets = [
-        {
-          label: "📅 Laufendes Jahr",
-          range: [
-            new Date(new Date().getFullYear(), 0, 1),
-            new Date()
-          ]
-        },
-        {
-          label: "🗓️ Letzte 30 Tage",
-          range: [
-            new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-            new Date()
-          ]
-        },
-        {
-          label: "📆 Dieses Quartal",
-          range: (() => {
-            const now = new Date();
-            const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
-            return [quarterStart, new Date()];
-          })()
-        }
-      ];
-
-      const container = document.createElement("div");
-      container.style.marginBottom = "8px";
-
-      presets.forEach(p => {
-        const btn = document.createElement("button");
-        btn.textContent = p.label;
-        btn.style.marginRight = "0.5rem";
-        btn.style.padding = "4px 8px";
-        btn.style.fontSize = "0.9rem";
-        btn.style.cursor = "pointer";
-        btn.onclick = () => {
-          instance.setDate(p.range, true);
-        };
-        container.appendChild(btn);
-      });
-
-      instance.calendarContainer.prepend(container);
-    }
-  });
-
-  let tradeChart = null;
-  function renderChartForRange(startDate, endDate) {
-    const filtered = tradeList.filter(t => {
-      const tDate = parseDate(t.time);
-      return tDate >= startDate && tDate <= endDate;
     });
 
-    filtered.sort((a, b) => a.time.localeCompare(b.time));
+    dataList.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 
-    let cumulativeBalance = 0;
-    const timestamps = [];
-    const balanceSeries = [];
+    const labels = dataList.map(d => d.timestamp);
+    const equity = dataList.map(d => d.equity);
+    const balance = dataList.map(d => d.balance);
+    const drawdown = dataList.map(d => d.drawdown);
 
-    filtered.forEach((trade) => {
-      cumulativeBalance += trade.profit;
-      timestamps.push(trade.time);
-      balanceSeries.push(cumulativeBalance);
-    });
+    const ctx = document.getElementById("chart").getContext("2d");
 
-    const ctx2 = document.getElementById("chart-trades").getContext("2d");
-
-    if (tradeChart) tradeChart.destroy();
-
-    tradeChart = new Chart(ctx2, {
-      type: "line",
+    new Chart(ctx, {
+      type: "bar",
       data: {
-        labels: timestamps,
+        labels,
         datasets: [
           {
-            label: "Kumulierte Balance (Zeitraum)",
-            data: balanceSeries,
-            borderColor: "rgb(54, 162, 235)",
-            fill: false,
-            tension: 0.1
+            type: "line",
+            label: "Equity",
+            data: equity,
+            borderColor: "rgb(75, 192, 192)",
+            tension: 0.1,
+            yAxisID: "y"
+          },
+          {
+            type: "line",
+            label: "Balance",
+            data: balance,
+            borderColor: "rgb(192, 75, 192)",
+            tension: 0.1,
+            yAxisID: "y"
+          },
+          {
+            type: "bar",
+            label: "Drawdown (%)",
+            data: drawdown,
+            backgroundColor: "rgba(255, 99, 132, 0.5)",
+            borderColor: "rgb(255, 99, 132)",
+            yAxisID: "y1"
           }
         ]
       },
@@ -343,143 +148,201 @@ async function fetchTradeHistory() {
         plugins: {
           title: {
             display: true,
-            text: `Trades vom ${startDate.toISOString().split("T")[0]} bis ${endDate.toISOString().split("T")[0]}`
+            text: "Equity, Balance & Drawdown"
           },
           legend: {
-            position: 'top'
+            position: "top"
           }
         },
         scales: {
           y: {
-            title: {
-              display: true,
-              text: "Balance (kumuliert)"
-            }
+            type: "linear",
+            position: "left",
+            title: { display: true, text: "Kontostand" }
+          },
+          y1: {
+            type: "linear",
+            position: "right",
+            grid: { drawOnChartArea: false },
+            title: { display: true, text: "Drawdown (%)" }
           },
           x: {
-            title: {
-              display: true,
-              text: "Zeit"
-            }
+            title: { display: true, text: "Zeit" }
           }
         }
       }
     });
 
-    updateTradeStats(filtered);
+    updateMonitoringStats(equity, balance, drawdown);
   }
 
-  renderChartForRange(defaultStart, defaultEnd);
-}
-function updateTradeStats(filteredTrades) {
-  if (filteredTrades.length === 0) {
-    statsTradesBody.innerHTML = "<tr><td colspan='2' style='text-align:center'>Keine Trades im gewählten Zeitraum</td></tr>";
-    return;
+  function updateMonitoringStats(equity, balance, drawdown) {
+    const lastEquity = equity.at(-1) || 0;
+    const firstEquity = equity[0] || 0;
+    const lastBalance = balance.at(-1) || 0;
+    const firstBalance = balance[0] || 0;
+    const profit = lastEquity - firstEquity;
+    const growth = ((lastBalance - firstBalance) / firstBalance) * 100;
+    const maxDD = Math.max(...drawdown);
+    const maxDDAbs = (maxDD / 100) * lastEquity;
+    const recovery = maxDDAbs > 0 ? profit / maxDDAbs : "–";
+    const returns = equity.slice(1).map((e, i) => e - equity[i]);
+    const avg = returns.reduce((a, b) => a + b, 0) / returns.length;
+    const stdDev = Math.sqrt(returns.map(r => (r - avg) ** 2).reduce((a, b) => a + b, 0) / returns.length);
+    const sharpe = stdDev > 0 ? avg / stdDev : "–";
+    const gains = returns.filter(r => r > 0).reduce((a, b) => a + b, 0);
+    const losses = returns.filter(r => r < 0).reduce((a, b) => a + b, 0);
+    const profitFactor = losses < 0 ? gains / Math.abs(losses) : "–";
+
+    const stats = [
+      ["Aktuelle Balance", `${lastBalance.toFixed(2)} €`],
+      ["Balance-Wachstum", `${growth.toFixed(2)} %`],
+      ["Aktueller Equity", `${lastEquity.toFixed(2)} €`],
+      ["Gewinn seit Start", `${profit.toFixed(2)} €`],
+      ["Maximaler Drawdown (%)", `${maxDD.toFixed(2)} %`],
+      ["Maximaler Drawdown (absolut)", `${maxDDAbs.toFixed(2)} €`],
+      ["Recovery Factor", typeof recovery === "number" ? recovery.toFixed(2) : recovery],
+      ["Sharpe Ratio", typeof sharpe === "number" ? sharpe.toFixed(2) : sharpe],
+      ["Profit Factor", typeof profitFactor === "number" ? profitFactor.toFixed(2) : profitFactor]
+    ];
+
+    statsMonitoringBody.innerHTML = "";
+    for (const [label, value] of stats) {
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${label}</td><td style="text-align:right">${value}</td>`;
+      statsMonitoringBody.appendChild(row);
+    }
   }
 
-  let cumulativeBalance = 0;
-  const profits = [];
-  filteredTrades.forEach(t => {
-    cumulativeBalance += t.profit;
-    profits.push(t.profit);
-  });
+  // ============ Trade-Daten laden ============
+  async function fetchTradeHistory() {
+    console.log("📦 Lade Daten aus 'ea_trades'...");
+    const snapshot = await getDocs(collection(db, "ea_trades"));
+    const tradeList = [];
 
-  const totalProfit = profits.reduce((a, b) => a + b, 0);
-  const avgProfit = totalProfit / profits.length;
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      if (d.time && typeof d.profit === "number") {
+        tradeList.push(d);
+      }
+    });
 
-  const maxProfit = Math.max(...profits);
-  const minProfit = Math.min(...profits);
+    if (tradeList.length === 0) return;
 
-  const wins = profits.filter(p => p > 0).length;
-  const losses = profits.filter(p => p <= 0).length;
+    const defaultStart = new Date("2025-01-01T00:00:00Z");
+    const defaultEnd = new Date();
 
-  // Recovery Factor: Gewinn seit Start / max Drawdown (Drawdown aus Profiten als negative Summe)
-  const maxDrawdown = (() => {
-    let peak = 0;
-    let drawdown = 0;
-    let maxDD = 0;
-    let running = 0;
-    profits.forEach(p => {
+    const rangeInput = document.getElementById("dateRange");
+    let selectedRange = [defaultStart, defaultEnd];
+
+    flatpickr(rangeInput, {
+      mode: "range",
+      dateFormat: "Y-m-d",
+      defaultDate: selectedRange,
+      locale: "de",
+      onChange: (dates) => {
+        if (dates.length === 2) {
+          renderChartForRange(dates[0], dates[1]);
+        }
+      }
+    });
+
+    let tradeChart = null;
+
+    function renderChartForRange(startDate, endDate) {
+      const filtered = tradeList
+        .filter(t => new Date(t.time) >= startDate && new Date(t.time) <= endDate)
+        .sort((a, b) => a.time.localeCompare(b.time));
+
+      const timestamps = [];
+      const balances = [];
+      let cum = 0;
+
+      filtered.forEach(t => {
+        cum += t.profit;
+        timestamps.push(t.time);
+        balances.push(cum);
+      });
+
+      const ctx = document.getElementById("chart-trades").getContext("2d");
+      if (tradeChart) tradeChart.destroy();
+
+      tradeChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: timestamps,
+          datasets: [{
+            label: "Kumulierte Balance (Zeitraum)",
+            data: balances,
+            borderColor: "rgb(54, 162, 235)",
+            fill: false,
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: `Trades vom ${startDate.toISOString().split("T")[0]} bis ${endDate.toISOString().split("T")[0]}`
+            }
+          }
+        }
+      });
+
+      updateTradeStats(filtered);
+    }
+
+    renderChartForRange(defaultStart, defaultEnd);
+  }
+
+  function updateTradeStats(trades) {
+    if (trades.length === 0) {
+      statsTradesBody.innerHTML = "<tr><td colspan='2' style='text-align:center'>Keine Trades im gewählten Zeitraum</td></tr>";
+      return;
+    }
+
+    const profits = trades.map(t => t.profit);
+    const total = profits.reduce((a, b) => a + b, 0);
+    const avg = total / profits.length;
+    const max = Math.max(...profits);
+    const min = Math.min(...profits);
+    const wins = profits.filter(p => p > 0).length;
+    const losses = profits.filter(p => p <= 0).length;
+
+    let peak = 0, dd = 0, maxDD = 0, running = 0;
+    for (let p of profits) {
       running += p;
       if (running > peak) peak = running;
-      drawdown = peak - running;
-      if (drawdown > maxDD) maxDD = drawdown;
-    });
-    return maxDD;
-  })();
-  const recoveryFactor = maxDrawdown > 0 ? totalProfit / maxDrawdown : "–";
+      dd = peak - running;
+      if (dd > maxDD) maxDD = dd;
+    }
 
-  // Sharpe Ratio (vereinfachte Form, Gewinn pro Trade als Return)
-  const returns = profits;
-  const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
-  const stdDev = Math.sqrt(
-    returns.map(r => (r - avgReturn) ** 2).reduce((a, b) => a + b, 0) / returns.length
-  );
-  const sharpeRatio = stdDev > 0 ? avgReturn / stdDev : "–";
+    const recovery = maxDD > 0 ? total / maxDD : "–";
+    const stdDev = Math.sqrt(profits.map(p => (p - avg) ** 2).reduce((a, b) => a + b, 0) / profits.length);
+    const sharpe = stdDev > 0 ? avg / stdDev : "–";
+    const gain = profits.filter(p => p > 0).reduce((a, b) => a + b, 0);
+    const loss = profits.filter(p => p < 0).reduce((a, b) => a + b, 0);
+    const pf = loss < 0 ? gain / Math.abs(loss) : "–";
 
-  // Profit Factor (Summe Gewinne / Summe Verluste)
-  const gains = profits.filter(r => r > 0).reduce((a, b) => a + b, 0);
-  const lossesSum = profits.filter(r => r < 0).reduce((a, b) => a + b, 0);
-  const profitFactor = lossesSum < 0 ? gains / Math.abs(lossesSum) : "–";
+    const stats = [
+      ["Anzahl Trades", trades.length],
+      ["Gesamter Gewinn", total.toFixed(2) + " €"],
+      ["Durchschnittlicher Gewinn", avg.toFixed(2) + " €"],
+      ["Maximaler Gewinn", max.toFixed(2) + " €"],
+      ["Maximaler Verlust", min.toFixed(2) + " €"],
+      ["Gewonnene Trades", wins],
+      ["Verlorene Trades", losses],
+      ["Recovery Factor", typeof recovery === "number" ? recovery.toFixed(2) : recovery],
+      ["Sharpe Ratio", typeof sharpe === "number" ? sharpe.toFixed(2) : sharpe],
+      ["Profit Factor", typeof pf === "number" ? pf.toFixed(2) : pf]
+    ];
 
-  const stats = [
-    ["Anzahl Trades", filteredTrades.length],
-    ["Gesamter Gewinn", totalProfit.toFixed(2) + " €"],
-    ["Durchschnittlicher Gewinn", avgProfit.toFixed(2) + " €"],
-    ["Maximaler Gewinn", maxProfit.toFixed(2) + " €"],
-    ["Maximaler Verlust", minProfit.toFixed(2) + " €"],
-    ["Gewonnene Trades", wins],
-    ["Verlorene Trades", losses],
-    ["Recovery Factor", typeof recoveryFactor === "number" ? recoveryFactor.toFixed(2) : recoveryFactor],
-    ["Sharpe Ratio", typeof sharpeRatio === "number" ? sharpeRatio.toFixed(2) : sharpeRatio],
-    ["Profit Factor", typeof profitFactor === "number" ? profitFactor.toFixed(2) : profitFactor]
-  ];
-
-  statsTradesBody.innerHTML = "";
-  for (const [label, value] of stats) {
-    const row = document.createElement("tr");
-    const cell1 = document.createElement("td");
-    const cell2 = document.createElement("td");
-    cell1.textContent = label;
-    cell2.textContent = value;
-    cell2.style.textAlign = "right";
-    row.appendChild(cell1);
-    row.appendChild(cell2);
-    statsTradesBody.appendChild(row);
+    statsTradesBody.innerHTML = "";
+    for (const [label, value] of stats) {
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${label}</td><td style="text-align:right">${value}</td>`;
+      statsTradesBody.appendChild(row);
+    }
   }
-}
 });
-
-// Beide Funktionen starten
-fetchData();
-fetchTradeHistory();
-
-// Tabs Umschalten
-const tab1Btn = document.getElementById("tab1-btn");
-const tab2Btn = document.getElementById("tab2-btn");
-const tab1Content = document.getElementById("tab1");
-const tab2Content = document.getElementById("tab2");
-
-tab1Btn.addEventListener("click", () => {
-  tab1Btn.classList.add("active");
-  tab2Btn.classList.remove("active");
-  tab1Content.classList.add("active");
-  tab2Content.classList.remove("active");
-});
-
-tab2Btn.addEventListener("click", () => {
-  tab2Btn.classList.add("active");
-  tab1Btn.classList.remove("active");
-  tab2Content.classList.add("active");
-  tab1Content.classList.remove("active");
-});
-window.login = async function () {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-  } catch (error) {
-    document.getElementById("login-error").textContent = "❌ Login fehlgeschlagen: " + error.message;
-  }
-};
