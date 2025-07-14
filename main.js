@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 console.log("📡 main.js geladen");
 
@@ -14,6 +15,44 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
+
+// DOM-Referenzen
+const loginForm = document.getElementById("login-form");
+const loginError = document.getElementById("login-error");
+const dashboard = document.getElementById("dashboard");
+const statsMonitoringBody = document.querySelector("#stats-monitoring tbody");
+const statsTradesBody = document.querySelector("#stats-trades tbody");
+
+// Authentifizierung überwachen
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginForm.style.display = "none";
+    dashboard.style.display = "block";
+    fetchData();
+    fetchTradeHistory();
+  } else {
+    loginForm.style.display = "block";
+    dashboard.style.display = "none";
+  }
+});
+
+// Login-Formular verarbeiten
+loginForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const email = loginForm["email"].value;
+  const password = loginForm["password"].value;
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then(() => {
+      loginError.textContent = "";
+    })
+    .catch((error) => {
+      console.error("Login fehlgeschlagen:", error.message);
+      loginError.textContent = "❌ Login fehlgeschlagen. Überprüfe E-Mail und Passwort.";
+    });
+});
+
 
 const statsMonitoringBody = document.querySelector("#stats-monitoring tbody");
 const statsTradesBody = document.querySelector("#stats-trades tbody");
