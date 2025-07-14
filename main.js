@@ -53,10 +53,6 @@ loginForm.addEventListener("submit", (e) => {
     });
 });
 
-
-const statsMonitoringBody = document.querySelector("#stats-monitoring tbody");
-const statsTradesBody = document.querySelector("#stats-trades tbody");
-
 async function fetchData() {
   console.log("🔍 Lade Daten aus 'ea_monitoring'...");
 
