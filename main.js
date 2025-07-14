@@ -356,37 +356,49 @@ tab2Btn.addEventListener("click", () => showTab(2));
       statsTradesBody.appendChild(row);
     }
   }
-  function updateMonthlyProfitTable(trades) {
-  // Map: Jahr => Array mit 12 Monatsgewinnen
-  const monthlyProfits = {};
+function updateMonthlyProfitTable(trades) {
+  const monthly = {};
 
-  trades.forEach(trade => {
-    const d = new Date(trade.time);
-    const year = d.getFullYear();
-    const month = d.getMonth(); // 0=Jan ... 11=Dez
+  // Trades nach Jahr und Monat gruppieren
+  trades.forEach(t => {
+    const date = new Date(t.time);
+    const year = date.getFullYear();
+    const month = date.getMonth(); // 0-basiert
 
-    if (!monthlyProfits[year]) {
-      monthlyProfits[year] = new Array(12).fill(0);
-    }
-
-    monthlyProfits[year][month] += trade.profit;
+    const key = `${year}-${month}`;
+    if (!monthly[key]) monthly[key] = 0;
+    monthly[key] += t.profit;
   });
 
-  const tbody = document.querySelector("#monthly-profit tbody");
+  const years = [...new Set(Object.keys(monthly).map(k => parseInt(k.split("-")[0])))].sort();
+  const tbody = document.getElementById("monthly-profit-body");
   tbody.innerHTML = "";
 
-  // Für jede Jahr-Tabelle eine Zeile bauen
-  Object.keys(monthlyProfits).sort().forEach(year => {
+  years.forEach(year => {
     const row = document.createElement("tr");
-    const cells = [`<td>${year}</td>`];
+    const cells = [`<td><strong>${year}</strong></td>`];
 
-    monthlyProfits[year].forEach(monatProfit => {
-      cells.push(`<td style="text-align:right">${monatProfit.toFixed(2)} €</td>`);
-    });
+    for (let i = 0; i < 12; i++) {
+      const key = `${year}-${i}`;
+      const profit = monthly[key] || 0;
+      cells.push(`<td style="text-align:right; cursor:pointer;" data-year="${year}" data-month="${i}">${profit.toFixed(2)} €</td>`);
+    }
 
     row.innerHTML = cells.join("");
     tbody.appendChild(row);
+
+    // Klick-Handler für jede Zelle
+    row.querySelectorAll("td[data-year]").forEach(cell => {
+      cell.addEventListener("click", () => {
+        const y = parseInt(cell.dataset.year);
+        const m = parseInt(cell.dataset.month);
+        const start = new Date(y, m, 1);
+        const end = new Date(y, m + 1, 0, 23, 59, 59);
+        renderChartForRange(start, end);
+      });
+    });
   });
 }
+
 
 });
