@@ -4,54 +4,55 @@ import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https:/
 
 console.log("📡 main.js geladen");
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC1cqUCWwACeFYFFZ7MyIOweamKZ8PnNKU",
-  authDomain: "ea-dashboard-636cf.firebaseapp.com",
-  projectId: "ea-dashboard-636cf",
-  storageBucket: "ea-dashboard-636cf.appspot.com",
-  messagingSenderId: "602990579998",
-  appId: "1:602990579998:web:c6775bcae19a8afba5b90f"
-};
+document.addEventListener("DOMContentLoaded", () => {
+  const firebaseConfig = {
+    apiKey: "AIzaSyC1cqUCWwACeFYFFZ7MyIOweamKZ8PnNKU",
+    authDomain: "ea-dashboard-636cf.firebaseapp.com",
+    projectId: "ea-dashboard-636cf",
+    storageBucket: "ea-dashboard-636cf.appspot.com",
+    messagingSenderId: "602990579998",
+    appId: "1:602990579998:web:c6775bcae19a8afba5b90f"
+  };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
-// DOM-Referenzen
-const loginForm = document.getElementById("login-form");
-const loginError = document.getElementById("login-error");
-const dashboard = document.getElementById("dashboard");
+  const loginForm = document.getElementById("login-form");
+  const loginSection = document.getElementById("login-section");
+  const contentSection = document.getElementById("content-section");
+  const logoutButton = document.getElementById("logout-button");
+
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = loginForm.email.value;
+    const password = loginForm.password.value;
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      loginForm.reset();
+    } catch (error) {
+      alert("Login fehlgeschlagen: " + error.message);
+    }
+  });
+
+  logoutButton.addEventListener("click", () => {
+    signOut(auth);
+  });
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      loginSection.style.display = "none";
+      contentSection.style.display = "block";
+      fetchData();
+      fetchTradeHistory();
+    } else {
+      loginSection.style.display = "block";
+      contentSection.style.display = "none";
+    }
+  });
+
 const statsMonitoringBody = document.querySelector("#stats-monitoring tbody");
 const statsTradesBody = document.querySelector("#stats-trades tbody");
-
-// Authentifizierung überwachen
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    loginForm.style.display = "none";
-    dashboard.style.display = "block";
-    fetchData();
-    fetchTradeHistory();
-  } else {
-    loginForm.style.display = "block";
-    dashboard.style.display = "none";
-  }
-});
-
-// Login-Formular verarbeiten
-loginForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const email = loginForm["email"].value;
-  const password = loginForm["password"].value;
-
-  signInWithEmailAndPassword(auth, email, password)
-    .then(() => {
-      loginError.textContent = "";
-    })
-    .catch((error) => {
-      console.error("Login fehlgeschlagen:", error.message);
-      loginError.textContent = "❌ Login fehlgeschlagen. Überprüfe E-Mail und Passwort.";
-    });
-});
 
 async function fetchData() {
   console.log("🔍 Lade Daten aus 'ea_monitoring'...");
