@@ -225,10 +225,11 @@ tab2Btn.addEventListener("click", () => showTab(2));
   }
 
   // ============ Trade-Daten laden ============
+  let tradeList = [];
   async function fetchTradeHistory() {
     console.log("📦 Lade Daten aus 'ea_trades'...");
     const snapshot = await getDocs(collection(db, "ea_trades"));
-    const tradeList = [];
+    tradeList = [];
 
     snapshot.forEach(doc => {
       const d = doc.data();
@@ -252,15 +253,15 @@ tab2Btn.addEventListener("click", () => showTab(2));
       locale: "de",
       onChange: (dates) => {
         if (dates.length === 2) {
-           renderChartForRange(dates[0], dates[1], tradeList);
+           renderChartForRange(dates[0], dates[1]);
         }
       }
     });
-  renderChartForRange(defaultStart, defaultEnd, tradeList);
+  renderChartForRange(defaultStart, defaultEnd);
   }
   
   let tradeChart = null;
-  function renderChartForRange(startDate, endDate, tradelist) {
+  function renderChartForRange(startDate, endDate) {
     const filtered = tradeList
       .filter(t => new Date(t.time) >= startDate && new Date(t.time) <= endDate)
       .sort((a, b) => a.time.localeCompare(b.time));
