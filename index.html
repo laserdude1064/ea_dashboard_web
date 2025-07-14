@@ -38,7 +38,7 @@
       </div>
 
       <div id="tab1" class="tab-content active">
-        <h1>📈 Equity Verlauf</h1>
+        <h1>Aktuelle Portfolio Übersicht</h1>
         <canvas id="chart" width="800" height="400"></canvas>
         <table id="stats-monitoring" border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse;">
           <thead>
@@ -52,7 +52,7 @@
       </div>
 
       <div id="tab2" class="tab-content">
-        <label for="dateRange">Zeitraum wählen (Trades):</label>
+        <label for="dateRange">Zeitraum wählen:</label>
         <div class="range-controls">
           <input id="dateRange" type="text" placeholder="Zeitraum auswählen…" />
         </div>
@@ -66,7 +66,8 @@
           </thead>
           <tbody></tbody>
         </table>
-        <table id="monthly-profit" border="1" style="margin-top: 20px; width: 100%; border-collapse: collapse;">
+        <h3>Monatliche Gewinne</h3>
+        <table id="monthly-profit-table" border="1" style="margin-top: 20px; width: 100%; border-collapse: collapse;">
         <thead>
           <tr>
             <th>Jahr</th>
@@ -84,8 +85,8 @@
             <th>Dez</th>
           </tr>
         </thead>
-        <tbody>
-          <!-- Hier kommen die Werte rein -->
+        <tbody id="monthly-profit-body">
+          <!-- Wird dynamisch gefüllt -->
         </tbody>
       </table>
       </div>
