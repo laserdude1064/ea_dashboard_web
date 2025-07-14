@@ -354,49 +354,49 @@ tab2Btn.addEventListener("click", () => showTab(2));
       statsTradesBody.appendChild(row);
     }
   }
-function updateMonthlyProfitTable(trades) {
-  const monthly = {};
-
-  // Trades nach Jahr und Monat gruppieren
-  trades.forEach(t => {
-    const date = new Date(t.time);
-    const year = date.getFullYear();
-    const month = date.getMonth(); // 0-basiert
-
-    const key = `${year}-${month}`;
-    if (!monthly[key]) monthly[key] = 0;
-    monthly[key] += t.profit;
-  });
-
-  const years = [...new Set(Object.keys(monthly).map(k => parseInt(k.split("-")[0])))].sort();
-  const tbody = document.getElementById("monthly-profit-body");
-  tbody.innerHTML = "";
-
-  years.forEach(year => {
-    const row = document.createElement("tr");
-    const cells = [`<td><strong>${year}</strong></td>`];
-
-    for (let i = 0; i < 12; i++) {
-      const key = `${year}-${i}`;
-      const profit = monthly[key] || 0;
-      cells.push(`<td style="text-align:right; cursor:pointer;" data-year="${year}" data-month="${i}">${profit.toFixed(2)} €</td>`);
-    }
-
-    row.innerHTML = cells.join("");
-    tbody.appendChild(row);
-
-    // Klick-Handler für jede Zelle
-    row.querySelectorAll("td[data-year]").forEach(cell => {
-      cell.addEventListener("click", () => {
-        const y = parseInt(cell.dataset.year);
-        const m = parseInt(cell.dataset.month);
-        const start = new Date(y, m, 1);
-        const end = new Date(y, m + 1, 0, 23, 59, 59);
-        renderChartForRange(dates[0], dates[1], tradeList);
+  function updateMonthlyProfitTable(trades) {
+    const monthly = {};
+  
+    // Trades nach Jahr und Monat gruppieren
+    trades.forEach(t => {
+      const date = new Date(t.time);
+      const year = date.getFullYear();
+      const month = date.getMonth(); // 0-basiert
+  
+      const key = `${year}-${month}`;
+      if (!monthly[key]) monthly[key] = 0;
+      monthly[key] += t.profit;
+    });
+  
+    const years = [...new Set(Object.keys(monthly).map(k => parseInt(k.split("-")[0])))].sort();
+    const tbody = document.getElementById("monthly-profit-body");
+    tbody.innerHTML = "";
+  
+    years.forEach(year => {
+      const row = document.createElement("tr");
+      const cells = [`<td><strong>${year}</strong></td>`];
+  
+      for (let i = 0; i < 12; i++) {
+        const key = `${year}-${i}`;
+        const profit = monthly[key] || 0;
+        cells.push(`<td style="text-align:right; cursor:pointer;" data-year="${year}" data-month="${i}">${profit.toFixed(2)} €</td>`);
+      }
+  
+      row.innerHTML = cells.join("");
+      tbody.appendChild(row);
+  
+      // Klick-Handler für jede Monatszelle
+      row.querySelectorAll("td[data-year]").forEach(cell => {
+        cell.addEventListener("click", () => {
+          const y = parseInt(cell.dataset.year);
+          const m = parseInt(cell.dataset.month);
+          const start = new Date(y, m, 1);
+          const end = new Date(y, m + 1, 0, 23, 59, 59);
+          renderChartForRange(start, end); 
+        });
       });
     });
-  });
-}
-
+  }
+  
 
 });
