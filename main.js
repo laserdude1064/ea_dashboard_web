@@ -448,7 +448,7 @@ function updateTradeStats(filteredTrades) {
     statsTradesBody.appendChild(row);
   }
 }
-
+});
 
 // Beide Funktionen starten
 fetchData();
@@ -482,4 +482,4 @@ window.login = async function () {
   } catch (error) {
     document.getElementById("login-error").textContent = "❌ Login fehlgeschlagen: " + error.message;
   }
-});
+};
