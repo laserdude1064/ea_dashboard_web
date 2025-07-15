@@ -325,7 +325,8 @@ tab2Btn.addEventListener("click", () => showTab(2));
               text: "Kumulierte Balance"
             }
           }
-}
+         }
+       }
       }
     });
 
