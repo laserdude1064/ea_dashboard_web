@@ -241,41 +241,56 @@ tab2Btn.addEventListener("click", () => showTab(2));
 
   updateMonitoringStats(equity, balance, drawdown);
 }
+async function fetchTradeHistory() {
+  console.log("📦 Lade Daten aus 'ea_trades'...");
+  const snapshot = await getDocs(collection(db, "ea_trades"));
+  tradeList = [];
 
-  async function fetchTradeHistory() {
-    console.log("📦 Lade Daten aus 'ea_trades'...");
-    const snapshot = await getDocs(collection(db, "ea_trades"));
-    tradeList = [];
+  const eaCommentPattern = /^Lasertrader_V\d{3}$/;
+  const positionIdToComment = new Map();
 
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      if (d.time && typeof d.profit === "number") {
-        tradeList.push(d);
+  snapshot.forEach(doc => {
+    const d = doc.data();
+    if (d.time && typeof d.profit === "number") {
+      // Wenn gültiger Kommentar vorhanden → merken
+      if (eaCommentPattern.test(d.comment)) {
+        positionIdToComment.set(d.position_id, d.comment);
       }
-    });
+      tradeList.push(d);
+    }
+  });
 
-    if (tradeList.length === 0) return;
+  // Nachträglich Kommentare ergänzen, falls nötig
+  tradeList.forEach(t => {
+    if (!eaCommentPattern.test(t.comment) && positionIdToComment.has(t.position_id)) {
+      t.comment = positionIdToComment.get(t.position_id);
+    }
+  });
 
-    const defaultStart = new Date("2025-01-01T00:00:00Z");
-    const defaultEnd = new Date();
+  if (tradeList.length === 0) return;
 
-    const rangeInput = document.getElementById("dateRange");
-    let selectedRange = [defaultStart, defaultEnd];
+  const defaultStart = new Date("2025-01-01T00:00:00Z");
+  const defaultEnd = new Date();
 
-    flatpickr(rangeInput, {
-      mode: "range",
-      dateFormat: "Y-m-d",
-      defaultDate: selectedRange,
-      locale: "de",
-      onChange: (dates) => {
-        if (dates.length === 2) {
-           renderChartForRange(dates[0], dates[1]);
-        }
+  const rangeInput = document.getElementById("dateRange");
+  let selectedRange = [defaultStart, defaultEnd];
+
+  flatpickr(rangeInput, {
+    mode: "range",
+    dateFormat: "Y-m-d",
+    defaultDate: selectedRange,
+    locale: "de",
+    onChange: (dates) => {
+      if (dates.length === 2) {
+        renderChartForRange(dates[0], dates[1]);
       }
-    });
+    }
+  });
+
   renderChartForRange(defaultStart, defaultEnd);
-  }
-  let tradeList = [];
+}
+
+    let tradeList = [];
   let tradeChart = null;
   let useTimeAxis = false;
  
