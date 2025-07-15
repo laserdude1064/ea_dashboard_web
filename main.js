@@ -183,6 +183,7 @@ tab2Btn.addEventListener("click", () => showTab(2));
                 callback: function(value, index) {
                   return index; // Zeigt Index statt Zeit
                 }
+             }  
           }
         }
       }
