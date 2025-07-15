@@ -292,7 +292,7 @@ async function fetchTradeHistory() {
 
     let tradeList = [];
   let tradeChart = null;
-  let useTimeAxis = false;
+  let useTimeAxis = true;
  function renderChartForRange(startDate, endDate) {
   const eaLegendContainer = document.getElementById("ea-legend");
   if (!eaLegendContainer) {
