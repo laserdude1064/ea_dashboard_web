@@ -101,96 +101,7 @@ tab2Btn.addEventListener("click", () => showTab(2));
     }
   };
   // ============ Monitoring-Daten laden ============
-  async function fetchData() {
-    console.log("🔍 Lade Daten aus 'ea_monitoring'...");
-    const snapshot = await getDocs(collection(db, "ea_monitoring"));
-    const dataList = [];
-
-    snapshot.forEach((doc) => {
-      const d = doc.data();
-      if (d.timestamp && d.equity && d.balance && d.drawdown !== undefined) {
-        dataList.push(d);
-      }
-    });
-
-    dataList.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
-
-    const labels = dataList.map(d => d.timestamp);
-    const equity = dataList.map(d => d.equity);
-    const balance = dataList.map(d => d.balance);
-    const drawdown = dataList.map(d => d.drawdown);
-
-    const ctx = document.getElementById("chart").getContext("2d");
-
-    new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels,
-        datasets: [
-          {
-            type: "line",
-            label: "Equity",
-            data: equity,
-            borderColor: "rgb(75, 192, 192)",
-            tension: 0.1,
-            yAxisID: "y"
-          },
-          {
-            type: "line",
-            label: "Balance",
-            data: balance,
-            borderColor: "rgb(192, 75, 192)",
-            tension: 0.1,
-            yAxisID: "y"
-          },
-          {
-            type: "bar",
-            label: "Drawdown (%)",
-            data: drawdown,
-            backgroundColor: "rgba(255, 99, 132, 0.5)",
-            borderColor: "rgb(255, 99, 132)",
-            yAxisID: "y1"
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          title: {
-            display: true,
-            text: "Equity, Balance & Drawdown"
-          },
-          legend: {
-            position: "top"
-          }
-        },
-        scales: {
-          y: {
-            type: "linear",
-            position: "left",
-            title: { display: true, text: "Kontostand" }
-          },
-          y1: {
-            type: "linear",
-            position: "right",
-            grid: { drawOnChartArea: false },
-            title: { display: true, text: "Drawdown (%)" }
-          },
-          x: {
-              type: "linear",
-              title: { display: true, text: "Index" },
-              ticks: {
-                callback: function(value, index) {
-                  return index; // Zeigt Index statt Zeit
-                }
-             }  
-          }
-        }
-      }
-    });
-
-    updateMonitoringStats(equity, balance, drawdown);
-  }
+  
 
   function updateMonitoringStats(equity, balance, drawdown) {
     const lastEquity = equity.at(-1) || 0;
@@ -231,7 +142,106 @@ tab2Btn.addEventListener("click", () => showTab(2));
   }
 
   // ============ Trade-Daten laden ============
-  
+  async function fetchData() {
+  console.log("🔍 Lade Daten aus 'ea_monitoring'...");
+  const snapshot = await getDocs(collection(db, "ea_monitoring"));
+  const dataList = [];
+
+  snapshot.forEach(doc => {
+    const d = doc.data();
+    if (d.timestamp && typeof d.equity === "number" && typeof d.balance === "number" && typeof d.drawdown === "number") {
+      dataList.push(d);
+    }
+  });
+
+  dataList.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+
+  const equity = dataList.map(d => d.equity);
+  const balance = dataList.map(d => d.balance);
+  const drawdown = dataList.map(d => d.drawdown);
+  const indexLabels = equity.map((_, i) => i); // numerische Index-Achse
+
+  const ctx = document.getElementById("chart").getContext("2d");
+
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: indexLabels,
+      datasets: [
+        {
+          type: "line",
+          label: "Equity",
+          data: equity,
+          borderColor: "rgb(75, 192, 192)",
+          tension: 0.1,
+          yAxisID: "y"
+        },
+        {
+          type: "line",
+          label: "Balance",
+          data: balance,
+          borderColor: "rgb(192, 75, 192)",
+          tension: 0.1,
+          yAxisID: "y"
+        },
+        {
+          type: "bar",
+          label: "Drawdown (%)",
+          data: drawdown,
+          backgroundColor: "rgba(255, 99, 132, 0.5)",
+          borderColor: "rgb(255, 99, 132)",
+          yAxisID: "y1"
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: "Equity, Balance & Drawdown"
+        },
+        legend: {
+          position: "top"
+        }
+      },
+      scales: {
+        x: {
+          type: "linear",
+          title: {
+            display: true,
+            text: "Index"
+          },
+          ticks: {
+            stepSize: 1
+          }
+        },
+        y: {
+          type: "linear",
+          position: "left",
+          title: {
+            display: true,
+            text: "Kontostand"
+          }
+        },
+        y1: {
+          type: "linear",
+          position: "right",
+          grid: {
+            drawOnChartArea: false
+          },
+          title: {
+            display: true,
+            text: "Drawdown (%)"
+          }
+        }
+      }
+    }
+  });
+
+  updateMonitoringStats(equity, balance, drawdown);
+}
+
   async function fetchTradeHistory() {
     console.log("📦 Lade Daten aus 'ea_trades'...");
     const snapshot = await getDocs(collection(db, "ea_trades"));
@@ -268,71 +278,71 @@ tab2Btn.addEventListener("click", () => showTab(2));
   let tradeList = [];
   let tradeChart = null;
   function renderChartForRange(startDate, endDate) {
-    const filtered = tradeList
-      .filter(t => new Date(t.time) >= startDate && new Date(t.time) <= endDate)
-      .sort((a, b) => a.time.localeCompare(b.time));
+  const filtered = tradeList
+    .filter(t => new Date(t.time) >= startDate && new Date(t.time) <= endDate)
+    .sort((a, b) => new Date(a.time) - new Date(b.time));
 
-    const timestamps = [];
-    const balances = [];
-    let cum = 0;
+  const balances = [];
+  let cum = 0;
 
-    filtered.forEach(t => {
-      cum += t.profit;
-      timestamps.push(t.time);
-      balances.push(cum);
-    });
+  filtered.forEach(t => {
+    cum += t.profit;
+    balances.push(cum);
+  });
 
-    const ctx = document.getElementById("chart-trades").getContext("2d");
-    if (tradeChart) tradeChart.destroy();
+  const ctx = document.getElementById("chart-trades").getContext("2d");
+  if (tradeChart) tradeChart.destroy();
 
-    tradeChart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: timestamps,
-        datasets: [{
-          label: "Kumulierte Balance (Zeitraum)",
-          data: balances,
-          borderColor: "rgb(54, 162, 235)",
-          fill: false,
-          tension: 0.1
-        }]
+  const indexLabels = balances.map((_, i) => i); // 0-basierter Index
+
+  tradeChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: indexLabels,
+      datasets: [{
+        label: "Kumulierte Balance (Zeitraum)",
+        data: balances,
+        borderColor: "rgb(54, 162, 235)",
+        fill: false,
+        tension: 0.1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: `Trades vom ${startDate.toISOString().split("T")[0]} bis ${endDate.toISOString().split("T")[0]}`
+        }
       },
-      options: {
-        responsive: true,
-        plugins: {
+      scales: {
+        x: {
+          type: "linear",
           title: {
             display: true,
-            text: `Trades vom ${startDate.toISOString().split("T")[0]} bis ${endDate.toISOString().split("T")[0]}`
-          }
-          
-        },
-        scales: {
-          x: {
-            type: "linear",
-            title: {
-              display: true,
-              text: "Trade-Index"
-            },
-            ticks: {
-              callback: function(value, index) {
-                return index;
-              }
-            }
+            text: "Trade-Index"
           },
-          y: {
-            title: {
-              display: true,
-              text: "Kumulierte Balance"
+          ticks: {
+            stepSize: 1,
+            callback: function(value) {
+              return value;
             }
           }
-         }
-       }
+        },
+        y: {
+          title: {
+            display: true,
+            text: "Kumulierte Balance"
+          }
+        }
       }
-    });
+    }
+  });
 
-    updateTradeStats(filtered);
-    updateMonthlyProfitTable(tradeList);
-  }
+  updateTradeStats(filtered);
+  updateMonthlyProfitTable(tradeList);
+}
+
   function updateTradeStats(trades) {
     if (trades.length === 0) {
       statsTradesBody.innerHTML = "<tr><td colspan='2' style='text-align:center'>Keine Trades im gewählten Zeitraum</td></tr>";
