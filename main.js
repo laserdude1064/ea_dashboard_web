@@ -279,6 +279,11 @@ tab2Btn.addEventListener("click", () => showTab(2));
   let tradeChart = null;
   let useTimeAxis = false;
     function renderChartForRange(startDate, endDate) {
+    const eaLegendContainer = document.getElementById("ea-legend");
+      if (!eaLegendContainer) {
+     console.warn("⚠️ Kein Element mit ID 'ea-legend' gefunden.");
+     return;
+    }
     const filtered = tradeList
       .filter(t => new Date(t.time) >= startDate && new Date(t.time) <= endDate)
       .sort((a, b) => new Date(a.time) - new Date(b.time));
