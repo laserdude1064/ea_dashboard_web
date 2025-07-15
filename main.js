@@ -302,7 +302,7 @@ async function fetchTradeHistory() {
 
   const eaCommentPattern = /^Lasertrader_V\d{3}$/;
 
-  // Schritt 1: Korrekte EA-Kommentare für Schließ-Deals nachtragen
+  // Schritt 1: Kommentare für Schließ-Deals übernehmen
   const positionToComment = {};
   tradeList.forEach(t => {
     if (eaCommentPattern.test(t.comment) && t.position_id !== undefined) {
@@ -312,16 +312,14 @@ async function fetchTradeHistory() {
 
   const filtered = tradeList
     .map(t => {
-      // Kommentar ggf. von position_id übernehmen
-      const updatedComment =
-        eaCommentPattern.test(t.comment) ? t.comment :
-        positionToComment[t.position_id] || null;
+      const updatedComment = eaCommentPattern.test(t.comment)
+        ? t.comment
+        : positionToComment[t.position_id] || null;
       return { ...t, comment: updatedComment };
     })
     .filter(t => new Date(t.time) >= startDate && new Date(t.time) <= endDate)
     .sort((a, b) => new Date(a.time) - new Date(b.time));
 
-  // Schritt 2: Gruppen für jede EA-Strategie
   const eaGroups = {};
   const colors = {};
   const colorPalette = ["#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#46f0f0", "#f032e6", "#bcf60c", "#fabebe"];
@@ -330,7 +328,6 @@ async function fetchTradeHistory() {
   filtered.forEach(t => {
     const comment = t.comment;
     if (!eaCommentPattern.test(comment)) return;
-
     if (!eaGroups[comment]) {
       eaGroups[comment] = [];
       colors[comment] = colorPalette[colorIndex++ % colorPalette.length];
@@ -338,10 +335,10 @@ async function fetchTradeHistory() {
     eaGroups[comment].push(t);
   });
 
-  // Schritt 3: Datensätze pro EA
+  // Datensätze
   const datasets = [];
 
-  // Datensatz für gesamtes Portfolio (grau, gestrichelt)
+  // Portfolio-Datensatz
   let totalCum = 0;
   const totalData = filtered.map((t, i) => {
     totalCum += t.profit;
@@ -358,10 +355,11 @@ async function fetchTradeHistory() {
     borderWidth: 2,
     borderDash: [5, 5],
     fill: false,
-    tension: 0.1
+    tension: 0.1,
+    hidden: false // Standard: sichtbar
   });
 
-  // EA-spezifische Datensätze
+  // EA-Datensätze
   for (const comment of Object.keys(eaGroups)) {
     let cum = 0;
     const group = eaGroups[comment];
@@ -381,11 +379,12 @@ async function fetchTradeHistory() {
       })),
       borderColor: colors[comment],
       fill: false,
-      tension: 0.1
+      tension: 0.1,
+      hidden: true // Standard: unsichtbar
     });
   }
 
-  // Chart zeichnen
+  // Chart erzeugen
   const ctx = document.getElementById("chart-trades").getContext("2d");
   if (tradeChart) tradeChart.destroy();
 
@@ -399,7 +398,7 @@ async function fetchTradeHistory() {
           display: true,
           text: `Trades vom ${startDate.toISOString().split("T")[0]} bis ${endDate.toISOString().split("T")[0]}`
         },
-        legend: { position: "top" }
+        legend: { display: false } // Eigene Legende verwenden
       },
       scales: {
         x: useTimeAxis
@@ -410,18 +409,41 @@ async function fetchTradeHistory() {
     }
   });
 
-  // Legende aktualisieren
-  eaLegendContainer.innerHTML =
-    `<div style="display:flex;align-items:center;margin-bottom:4px;">
-      <span style="width:12px;height:12px;background:#666;border:1px solid #444;display:inline-block;margin-right:8px;"></span>
-      <span>Gesamtes Portfolio</span>
-    </div>` +
-    Object.keys(colors).map(comment => {
-      return `<div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="width:12px;height:12px;background:${colors[comment]};display:inline-block;margin-right:8px;"></span>
-                <span>${comment}</span>
-              </div>`;
-    }).join("");
+  // Interaktive Legende mit Checkboxen
+  eaLegendContainer.innerHTML = "";
+  datasets.forEach((ds, index) => {
+    const wrapper = document.createElement("div");
+    wrapper.style.display = "flex";
+    wrapper.style.alignItems = "center";
+    wrapper.style.marginBottom = "4px";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = !ds.hidden;
+    checkbox.dataset.index = index;
+    checkbox.style.marginRight = "6px";
+
+    const colorBox = document.createElement("span");
+    colorBox.style.width = "12px";
+    colorBox.style.height = "12px";
+    colorBox.style.background = ds.borderColor;
+    colorBox.style.display = "inline-block";
+    colorBox.style.marginRight = "8px";
+
+    const label = document.createElement("span");
+    label.textContent = ds.label;
+
+    wrapper.appendChild(checkbox);
+    wrapper.appendChild(colorBox);
+    wrapper.appendChild(label);
+    eaLegendContainer.appendChild(wrapper);
+
+    checkbox.addEventListener("change", () => {
+      const chartIndex = parseInt(checkbox.dataset.index);
+      tradeChart.setDatasetVisibility(chartIndex, checkbox.checked);
+      tradeChart.update();
+    });
+  });
 
   updateTradeStats(filtered);
   updateMonthlyProfitTable(tradeList);
