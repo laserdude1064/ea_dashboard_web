@@ -305,7 +305,7 @@ tab2Btn.addEventListener("click", () => showTab(2));
             text: `Trades vom ${startDate.toISOString().split("T")[0]} bis ${endDate.toISOString().split("T")[0]}`
           }
           
-        }
+        },
         scales: {
           x: {
             type: "linear",
