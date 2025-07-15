@@ -177,7 +177,12 @@ tab2Btn.addEventListener("click", () => showTab(2));
             title: { display: true, text: "Drawdown (%)" }
           },
           x: {
-            title: { display: true, text: "Zeit" }
+              type: "linear",
+              title: { display: true, text: "Index" },
+              ticks: {
+                callback: function(value, index) {
+                  return index; // Zeigt Index statt Zeit
+                }
           }
         }
       }
@@ -298,7 +303,28 @@ tab2Btn.addEventListener("click", () => showTab(2));
             display: true,
             text: `Trades vom ${startDate.toISOString().split("T")[0]} bis ${endDate.toISOString().split("T")[0]}`
           }
+          
         }
+        scales: {
+          x: {
+            type: "linear",
+            title: {
+              display: true,
+              text: "Trade-Index"
+            },
+            ticks: {
+              callback: function(value, index) {
+                return index;
+              }
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: "Kumulierte Balance"
+            }
+          }
+}
       }
     });
 
