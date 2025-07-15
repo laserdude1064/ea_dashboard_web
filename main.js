@@ -277,6 +277,7 @@ tab2Btn.addEventListener("click", () => showTab(2));
   }
   let tradeList = [];
   let tradeChart = null;
+  let useTimeAxis = false;
   function renderChartForRange(startDate, endDate) {
   const filtered = tradeList
     .filter(t => new Date(t.time) >= startDate && new Date(t.time) <= endDate)
@@ -285,6 +286,7 @@ tab2Btn.addEventListener("click", () => showTab(2));
   const balances = [];
   let cum = 0;
 
+  const timestamps = filtered.map(t => new Date(t.time));
   filtered.forEach(t => {
     cum += t.profit;
     balances.push(cum);
@@ -293,12 +295,12 @@ tab2Btn.addEventListener("click", () => showTab(2));
   const ctx = document.getElementById("chart-trades").getContext("2d");
   if (tradeChart) tradeChart.destroy();
 
-  const indexLabels = balances.map((_, i) => i); // 0-basierter Index
+  const xLabels = useTimeAxis ? timestamps : balances.map((_, i) => i);
 
   tradeChart = new Chart(ctx, {
     type: "line",
     data: {
-      labels: indexLabels,
+      labels: xLabels,
       datasets: [{
         label: "Kumulierte Balance (Zeitraum)",
         data: balances,
@@ -316,19 +318,20 @@ tab2Btn.addEventListener("click", () => showTab(2));
         }
       },
       scales: {
-        x: {
-          type: "linear",
-          title: {
-            display: true,
-            text: "Trade-Index"
-          },
-          ticks: {
-            stepSize: 1,
-            callback: function(value) {
-              return value;
+        x: useTimeAxis
+          ? {
+              type: "time",
+              time: { unit: "day" },
+              title: { display: true, text: "Datum" }
             }
-          }
-        },
+          : {
+              type: "linear",
+              title: { display: true, text: "Trade-Index" },
+              ticks: {
+                stepSize: 1,
+                callback: value => value
+              }
+            },
         y: {
           title: {
             display: true,
@@ -342,7 +345,14 @@ tab2Btn.addEventListener("click", () => showTab(2));
   updateTradeStats(filtered);
   updateMonthlyProfitTable(tradeList);
 }
-
+document.getElementById("toggle-time-axis").addEventListener("change", (e) => {
+  useTimeAxis = e.target.checked;
+  if (tradeList.length > 0) {
+    const start = new Date(tradeList[0].time);
+    const end = new Date(tradeList.at(-1).time);
+    renderChartForRange(start, end);
+  }
+});
   function updateTradeStats(trades) {
     if (trades.length === 0) {
       statsTradesBody.innerHTML = "<tr><td colspan='2' style='text-align:center'>Keine Trades im gewählten Zeitraum</td></tr>";
