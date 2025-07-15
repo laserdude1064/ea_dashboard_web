@@ -278,82 +278,87 @@ tab2Btn.addEventListener("click", () => showTab(2));
   let tradeList = [];
   let tradeChart = null;
   let useTimeAxis = false;
-    function renderChartForRange(startDate, endDate) {
-    const eaLegendContainer = document.getElementById("ea-legend");
-      if (!eaLegendContainer) {
-     console.warn("⚠️ Kein Element mit ID 'ea-legend' gefunden.");
-     return;
-    }
-    const filtered = tradeList
-      .filter(t => new Date(t.time) >= startDate && new Date(t.time) <= endDate)
-      .sort((a, b) => new Date(a.time) - new Date(b.time));
-
-    const eaGroups = {};
-    const colors = {};
-    const colorPalette = ["#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#46f0f0", "#f032e6", "#bcf60c", "#fabebe"];
-    let colorIndex = 0;
-
-    filtered.forEach(t => {
-      const comment = t.comment || "(unbekannt)";
-      if (!eaGroups[comment]) {
-        eaGroups[comment] = [];
-        colors[comment] = colorPalette[colorIndex++ % colorPalette.length];
-      }
-      eaGroups[comment].push(t);
-    });
-
-    const datasets = Object.keys(eaGroups).map(comment => {
-      let cum = 0;
-      const data = eaGroups[comment].map(t => {
-        cum += t.profit;
-        return { x: useTimeAxis ? new Date(t.time) : undefined, y: cum };
-      });
-      return {
-        label: comment,
-        data: data.map((d, i) => ({ x: useTimeAxis ? new Date(eaGroups[comment][i].time) : i, y: d.y })),
-        borderColor: colors[comment],
-        fill: false,
-        tension: 0.1
-      };
-    });
-
-    const ctx = document.getElementById("chart-trades").getContext("2d");
-    if (tradeChart) tradeChart.destroy();
-
-    tradeChart = new Chart(ctx, {
-      type: "line",
-      data: { datasets },
-      options: {
-        responsive: true,
-        plugins: {
-          title: {
-            display: true,
-            text: `Trades vom ${startDate.toISOString().split("T")[0]} bis ${endDate.toISOString().split("T")[0]}`
-          },
-          legend: { position: "top" }
-        },
-        scales: {
-          x: useTimeAxis
-            ? { type: "time", time: { unit: "day" }, title: { display: true, text: "Datum" } }
-            : { type: "linear", title: { display: true, text: "Trade-Index" }, ticks: { stepSize: 1 } },
-          y: { title: { display: true, text: "Kumulierte Balance" } }
-        }
-      }
-    });
-
-    // Legende aktualisieren
-    if (eaLegendContainer) {
-      eaLegendContainer.innerHTML = Object.keys(colors).map(comment => {
-        return `<div style="display:flex;align-items:center;margin-bottom:4px;">
-                  <span style="width:12px;height:12px;background:${colors[comment]};display:inline-block;margin-right:8px;"></span>
-                  <span>${comment}</span>
-                </div>`;
-      }).join("");
-    }
-
-    updateTradeStats(filtered);
-    updateMonthlyProfitTable(tradeList);
+ 
+function renderChartForRange(startDate, endDate) {
+  const eaLegendContainer = document.getElementById("ea-legend");
+  if (!eaLegendContainer) {
+    console.warn("⚠️ Kein Element mit ID 'ea-legend' gefunden.");
+    return;
   }
+
+  const eaCommentPattern = /^Lasertrader_V\d{3}$/;
+
+  const filtered = tradeList
+    .filter(t => new Date(t.time) >= startDate && new Date(t.time) <= endDate)
+    .sort((a, b) => new Date(a.time) - new Date(b.time));
+
+  const eaGroups = {};
+  const colors = {};
+  const colorPalette = ["#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#46f0f0", "#f032e6", "#bcf60c", "#fabebe"];
+  let colorIndex = 0;
+
+  filtered.forEach(t => {
+    const comment = t.comment || "(unbekannt)";
+    if (!eaCommentPattern.test(comment)) return; // Nur passende Kommentare berücksichtigen
+
+    if (!eaGroups[comment]) {
+      eaGroups[comment] = [];
+      colors[comment] = colorPalette[colorIndex++ % colorPalette.length];
+    }
+    eaGroups[comment].push(t);
+  });
+
+  const datasets = Object.keys(eaGroups).map(comment => {
+    let cum = 0;
+    const data = eaGroups[comment].map(t => {
+      cum += t.profit;
+      return { x: useTimeAxis ? new Date(t.time) : undefined, y: cum };
+    });
+    return {
+      label: comment,
+      data: data.map((d, i) => ({ x: useTimeAxis ? new Date(eaGroups[comment][i].time) : i, y: d.y })),
+      borderColor: colors[comment],
+      fill: false,
+      tension: 0.1
+    };
+  });
+
+  const ctx = document.getElementById("chart-trades").getContext("2d");
+  if (tradeChart) tradeChart.destroy();
+
+  tradeChart = new Chart(ctx, {
+    type: "line",
+    data: { datasets },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: `Trades vom ${startDate.toISOString().split("T")[0]} bis ${endDate.toISOString().split("T")[0]}`
+        },
+        legend: { position: "top" }
+      },
+      scales: {
+        x: useTimeAxis
+          ? { type: "time", time: { unit: "day" }, title: { display: true, text: "Datum" } }
+          : { type: "linear", title: { display: true, text: "Trade-Index" }, ticks: { stepSize: 1 } },
+        y: { title: { display: true, text: "Kumulierte Balance" } }
+      }
+    }
+  });
+
+  // Legende aktualisieren
+  eaLegendContainer.innerHTML = Object.keys(colors).map(comment => {
+    return `<div style="display:flex;align-items:center;margin-bottom:4px;">
+              <span style="width:12px;height:12px;background:${colors[comment]};display:inline-block;margin-right:8px;"></span>
+              <span>${comment}</span>
+            </div>`;
+  }).join("");
+
+  updateTradeStats(filtered);
+  updateMonthlyProfitTable(tradeList);
+}
+
 
 document.getElementById("toggle-time-axis").addEventListener("change", (e) => {
   useTimeAxis = e.target.checked;
