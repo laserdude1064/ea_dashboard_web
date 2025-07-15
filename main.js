@@ -293,8 +293,7 @@ async function fetchTradeHistory() {
     let tradeList = [];
   let tradeChart = null;
   let useTimeAxis = false;
- 
-function renderChartForRange(startDate, endDate) {
+ function renderChartForRange(startDate, endDate) {
   const eaLegendContainer = document.getElementById("ea-legend");
   if (!eaLegendContainer) {
     console.warn("⚠️ Kein Element mit ID 'ea-legend' gefunden.");
@@ -303,18 +302,34 @@ function renderChartForRange(startDate, endDate) {
 
   const eaCommentPattern = /^Lasertrader_V\d{3}$/;
 
+  // Schritt 1: Korrekte EA-Kommentare für Schließ-Deals nachtragen
+  const positionToComment = {};
+  tradeList.forEach(t => {
+    if (eaCommentPattern.test(t.comment) && t.position_id !== undefined) {
+      positionToComment[t.position_id] = t.comment;
+    }
+  });
+
   const filtered = tradeList
+    .map(t => {
+      // Kommentar ggf. von position_id übernehmen
+      const updatedComment =
+        eaCommentPattern.test(t.comment) ? t.comment :
+        positionToComment[t.position_id] || null;
+      return { ...t, comment: updatedComment };
+    })
     .filter(t => new Date(t.time) >= startDate && new Date(t.time) <= endDate)
     .sort((a, b) => new Date(a.time) - new Date(b.time));
 
+  // Schritt 2: Gruppen für jede EA-Strategie
   const eaGroups = {};
   const colors = {};
   const colorPalette = ["#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#46f0f0", "#f032e6", "#bcf60c", "#fabebe"];
   let colorIndex = 0;
 
   filtered.forEach(t => {
-    const comment = t.comment || "(unbekannt)";
-    if (!eaCommentPattern.test(comment)) return; // Nur passende Kommentare berücksichtigen
+    const comment = t.comment;
+    if (!eaCommentPattern.test(comment)) return;
 
     if (!eaGroups[comment]) {
       eaGroups[comment] = [];
@@ -323,21 +338,54 @@ function renderChartForRange(startDate, endDate) {
     eaGroups[comment].push(t);
   });
 
-  const datasets = Object.keys(eaGroups).map(comment => {
-    let cum = 0;
-    const data = eaGroups[comment].map(t => {
-      cum += t.profit;
-      return { x: useTimeAxis ? new Date(t.time) : undefined, y: cum };
-    });
+  // Schritt 3: Datensätze pro EA
+  const datasets = [];
+
+  // Datensatz für gesamtes Portfolio (grau, gestrichelt)
+  let totalCum = 0;
+  const totalData = filtered.map((t, i) => {
+    totalCum += t.profit;
     return {
-      label: comment,
-      data: data.map((d, i) => ({ x: useTimeAxis ? new Date(eaGroups[comment][i].time) : i, y: d.y })),
-      borderColor: colors[comment],
-      fill: false,
-      tension: 0.1
+      x: useTimeAxis ? new Date(t.time) : i,
+      y: totalCum
     };
   });
 
+  datasets.push({
+    label: "Gesamtes Portfolio",
+    data: totalData,
+    borderColor: "#666",
+    borderWidth: 2,
+    borderDash: [5, 5],
+    fill: false,
+    tension: 0.1
+  });
+
+  // EA-spezifische Datensätze
+  for (const comment of Object.keys(eaGroups)) {
+    let cum = 0;
+    const group = eaGroups[comment];
+    const data = group.map(t => {
+      cum += t.profit;
+      return {
+        x: useTimeAxis ? new Date(t.time) : undefined,
+        y: cum
+      };
+    });
+
+    datasets.push({
+      label: comment,
+      data: data.map((d, i) => ({
+        x: useTimeAxis ? new Date(group[i].time) : i,
+        y: d.y
+      })),
+      borderColor: colors[comment],
+      fill: false,
+      tension: 0.1
+    });
+  }
+
+  // Chart zeichnen
   const ctx = document.getElementById("chart-trades").getContext("2d");
   if (tradeChart) tradeChart.destroy();
 
@@ -363,12 +411,17 @@ function renderChartForRange(startDate, endDate) {
   });
 
   // Legende aktualisieren
-  eaLegendContainer.innerHTML = Object.keys(colors).map(comment => {
-    return `<div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="width:12px;height:12px;background:${colors[comment]};display:inline-block;margin-right:8px;"></span>
-              <span>${comment}</span>
-            </div>`;
-  }).join("");
+  eaLegendContainer.innerHTML =
+    `<div style="display:flex;align-items:center;margin-bottom:4px;">
+      <span style="width:12px;height:12px;background:#666;border:1px solid #444;display:inline-block;margin-right:8px;"></span>
+      <span>Gesamtes Portfolio</span>
+    </div>` +
+    Object.keys(colors).map(comment => {
+      return `<div style="display:flex;align-items:center;margin-bottom:4px;">
+                <span style="width:12px;height:12px;background:${colors[comment]};display:inline-block;margin-right:8px;"></span>
+                <span>${comment}</span>
+              </div>`;
+    }).join("");
 
   updateTradeStats(filtered);
   updateMonthlyProfitTable(tradeList);
