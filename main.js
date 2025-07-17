@@ -246,7 +246,7 @@ async function fetchTradeHistory() {
   const snapshot = await getDocs(collection(db, "ea_trades"));
   tradeList = [];
 
-  const eaCommentPattern = /^Lasertrader_V\d{3}$/;
+  const eaCommentPattern = /^Lasertrader_V\d{3}(?:_[A-Z]{6}_[A-Z]{2,})?$/;
   const positionIdToComment = new Map();
 
   snapshot.forEach(doc => {
@@ -300,7 +300,7 @@ async function fetchTradeHistory() {
     return;
   }
 
-  const eaCommentPattern = /^Lasertrader_V\d{3}$/;
+  const eaCommentPattern = /^Lasertrader_V\d{3}(?:_[A-Z]{6}_[A-Z]{2,})?$/;
 
   // Schritt 1: Kommentare für Schließ-Deals übernehmen
   const positionToComment = {};
