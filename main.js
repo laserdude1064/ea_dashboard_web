@@ -167,7 +167,7 @@ async function fetchData() {
   const indexLabels = equity.map((_, i) => i);
 
   const useTimeAxis =
-    document.getElementById("toggle-time-axis-tab1")?.checked ?? false;
+    document.getElementById("toggle-time-axis-live")?.checked ?? false;
 
   const labels = useTimeAxis ? timestamps : indexLabels;
   const xScaleType = useTimeAxis ? "time" : "linear";
