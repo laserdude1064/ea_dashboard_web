@@ -141,7 +141,7 @@ tab2Btn.addEventListener("click", () => showTab(2));
   }
 
   // ============ Trade-Daten laden ============
- let liveChart = null; // globale Referenz für den Chart
+
 async function fetchData() {
   console.log("🔍 Lade Daten aus 'ea_monitoring'...");
   const snapshot = await getDocs(collection(db, "ea_monitoring"));
@@ -188,10 +188,8 @@ async function fetchData() {
   }
 
   // Chart
- if (liveChart) {
-  liveChart.destroy();
-}
-  liveChart = new Chart(ctx, {
+
+ new Chart(ctx, {
     type: "bar",
     data: {
       labels: labels,
@@ -284,7 +282,6 @@ async function fetchData() {
 
   updateMonitoringStats(equity, balance, drawdown);
 }
-document.getElementById("toggle-time-axis-live").addEventListener("change", fetchData);
  
 async function fetchTradeHistory() {
   console.log("📦 Lade Daten aus 'ea_trades'...");
