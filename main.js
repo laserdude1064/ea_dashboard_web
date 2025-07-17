@@ -100,8 +100,7 @@ tab2Btn.addEventListener("click", () => showTab(2));
       document.getElementById("login-error").textContent = "❌ Login fehlgeschlagen: " + error.message;
     }
   };
-  // ============ Monitoring-Daten laden ============
-  
+  // ============ Monitoring-Daten laden ============ 
 
   function updateMonitoringStats(equity, balance, drawdown) {
     const lastEquity = equity.at(-1) || 0;
@@ -142,14 +141,19 @@ tab2Btn.addEventListener("click", () => showTab(2));
   }
 
   // ============ Trade-Daten laden ============
-  async function fetchData() {
+async function fetchData() {
   console.log("🔍 Lade Daten aus 'ea_monitoring'...");
   const snapshot = await getDocs(collection(db, "ea_monitoring"));
   const dataList = [];
 
   snapshot.forEach(doc => {
     const d = doc.data();
-    if (d.timestamp && typeof d.equity === "number" && typeof d.balance === "number" && typeof d.drawdown === "number") {
+    if (
+      d.timestamp &&
+      typeof d.equity === "number" &&
+      typeof d.balance === "number" &&
+      typeof d.drawdown === "number"
+    ) {
       dataList.push(d);
     }
   });
@@ -159,107 +163,124 @@ tab2Btn.addEventListener("click", () => showTab(2));
   const equity = dataList.map(d => d.equity);
   const balance = dataList.map(d => d.balance);
   const drawdown = dataList.map(d => d.drawdown);
-  const indexLabels = equity.map((_, i) => i); // numerische Index-Achse
+  const timestamps = dataList.map(d => d.timestamp);
+  const indexLabels = equity.map((_, i) => i);
+
+  const useTimeAxis =
+    document.getElementById("toggle-time-axis-tab1")?.checked ?? false;
+
+  const labels = useTimeAxis ? timestamps : indexLabels;
+  const xScaleType = useTimeAxis ? "time" : "linear";
+  const xTitle = useTimeAxis ? "Zeit" : "Index";
 
   const ctx = document.getElementById("chart").getContext("2d");
 
-// Vor dem Chart: Hilfsfunktionen
-function getMinWithPadding(data, paddingFactor = 0.1) {
-  const min = Math.min(...data);
-  return min - Math.abs(min * paddingFactor);
-}
+  // Hilfsfunktionen
+  function getMinWithPadding(data, paddingFactor = 0.1) {
+    const min = Math.min(...data);
+    return min - Math.abs(min * paddingFactor);
+  }
 
-function getMaxWithPadding(data, paddingFactor = 0.1) {
-  const max = Math.max(...data);
-  return max + Math.abs(max * paddingFactor);
-}
+  function getMaxWithPadding(data, paddingFactor = 0.1) {
+    const max = Math.max(...data);
+    return max + Math.abs(max * paddingFactor);
+  }
 
-// Chart:
-new Chart(ctx, {
-  type: "bar",
-  data: {
-    labels: indexLabels,
-    datasets: [
-      {
-        type: "line",
-        label: "Equity",
-        data: equity,
-        borderColor: "rgb(75, 192, 192)",
-        tension: 0.1,
-        yAxisID: "y"
-      },
-      {
-        type: "line",
-        label: "Balance",
-        data: balance,
-        borderColor: "rgb(192, 75, 192)",
-        tension: 0.1,
-        yAxisID: "y"
-      },
-      {
-        type: "bar",
-        label: "Drawdown (%)",
-        data: drawdown,
-        backgroundColor: "rgba(255, 99, 132, 0.5)",
-        borderColor: "rgb(255, 99, 132)",
-        yAxisID: "y1"
-      }
-    ]
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      title: {
-        display: true,
-        text: "Equity, Balance & Drawdown"
-      },
-      legend: {
-        position: "top"
-      }
+  // Chart
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          type: "line",
+          label: "Equity",
+          data: equity,
+          borderColor: "rgb(75, 192, 192)",
+          tension: 0.1,
+          yAxisID: "y"
+        },
+        {
+          type: "line",
+          label: "Balance",
+          data: balance,
+          borderColor: "rgb(192, 75, 192)",
+          tension: 0.1,
+          yAxisID: "y"
+        },
+        {
+          type: "bar",
+          label: "Drawdown (%)",
+          data: drawdown,
+          backgroundColor: "rgba(255, 99, 132, 0.5)",
+          borderColor: "rgb(255, 99, 132)",
+          yAxisID: "y1"
+        }
+      ]
     },
-    scales: {
-      x: {
-        type: "linear",
+    options: {
+      responsive: true,
+      plugins: {
         title: {
           display: true,
-          text: "Index"
+          text: "Equity, Balance & Drawdown"
         },
-        ticks: {
-          stepSize: 1
+        legend: {
+          position: "top"
         }
       },
-      y: {
-        type: "linear",
-        position: "left",
-        title: {
-          display: true,
-          text: "Kontostand"
+      scales: {
+        x: {
+          type: xScaleType,
+          title: {
+            display: true,
+            text: xTitle
+          },
+          ticks: {
+            stepSize: useTimeAxis ? undefined : 1
+          },
+          time: useTimeAxis
+            ? {
+                tooltipFormat: "dd.MM.yyyy HH:mm",
+                displayFormats: {
+                  hour: "HH:mm",
+                  day: "dd.MM"
+                }
+              }
+            : undefined
         },
-        beginAtZero: false,
-        min: getMinWithPadding([...equity, ...balance]),
-        max: getMaxWithPadding([...equity, ...balance])
-      },
-      y1: {
-        type: "linear",
-        position: "right",
-        grid: {
-          drawOnChartArea: false
+        y: {
+          type: "linear",
+          position: "left",
+          title: {
+            display: true,
+            text: "Kontostand"
+          },
+          beginAtZero: false,
+          min: getMinWithPadding([...equity, ...balance]),
+          max: getMaxWithPadding([...equity, ...balance])
         },
-        title: {
-          display: true,
-          text: "Drawdown (%)"
-        },
-        beginAtZero: false,
-        min: getMinWithPadding(drawdown),
-        max: getMaxWithPadding(drawdown)
+        y1: {
+          type: "linear",
+          position: "right",
+          grid: {
+            drawOnChartArea: false
+          },
+          title: {
+            display: true,
+            text: "Drawdown (%)"
+          },
+          beginAtZero: false,
+          min: getMinWithPadding(drawdown),
+          max: getMaxWithPadding(drawdown)
+        }
       }
     }
-  }
-});
-
+  });
 
   updateMonitoringStats(equity, balance, drawdown);
 }
+
 async function fetchTradeHistory() {
   console.log("📦 Lade Daten aus 'ea_trades'...");
   const snapshot = await getDocs(collection(db, "ea_trades"));
@@ -308,7 +329,8 @@ async function fetchTradeHistory() {
 
   renderChartForRange(defaultStart, defaultEnd);
 }
-
+document.getElementById("toggle-time-axis-tab1").addEventListener("change", fetchData);
+ 
     let tradeList = [];
   let tradeChart = null;
   let useTimeAxis = false;
