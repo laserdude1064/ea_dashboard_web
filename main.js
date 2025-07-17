@@ -163,85 +163,100 @@ tab2Btn.addEventListener("click", () => showTab(2));
 
   const ctx = document.getElementById("chart").getContext("2d");
 
-  new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: indexLabels,
-      datasets: [
-        {
-          type: "line",
-          label: "Equity",
-          data: equity,
-          borderColor: "rgb(75, 192, 192)",
-          tension: 0.1,
-          yAxisID: "y"
-        },
-        {
-          type: "line",
-          label: "Balance",
-          data: balance,
-          borderColor: "rgb(192, 75, 192)",
-          tension: 0.1,
-          yAxisID: "y"
-        },
-        {
-          type: "bar",
-          label: "Drawdown (%)",
-          data: drawdown,
-          backgroundColor: "rgba(255, 99, 132, 0.5)",
-          borderColor: "rgb(255, 99, 132)",
-          yAxisID: "y1"
-        }
-      ]
+// Vor dem Chart: Hilfsfunktionen
+function getMinWithPadding(data, paddingFactor = 0.1) {
+  const min = Math.min(...data);
+  return min - Math.abs(min * paddingFactor);
+}
+
+function getMaxWithPadding(data, paddingFactor = 0.1) {
+  const max = Math.max(...data);
+  return max + Math.abs(max * paddingFactor);
+}
+
+// Chart:
+new Chart(ctx, {
+  type: "bar",
+  data: {
+    labels: indexLabels,
+    datasets: [
+      {
+        type: "line",
+        label: "Equity",
+        data: equity,
+        borderColor: "rgb(75, 192, 192)",
+        tension: 0.1,
+        yAxisID: "y"
+      },
+      {
+        type: "line",
+        label: "Balance",
+        data: balance,
+        borderColor: "rgb(192, 75, 192)",
+        tension: 0.1,
+        yAxisID: "y"
+      },
+      {
+        type: "bar",
+        label: "Drawdown (%)",
+        data: drawdown,
+        backgroundColor: "rgba(255, 99, 132, 0.5)",
+        borderColor: "rgb(255, 99, 132)",
+        yAxisID: "y1"
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      title: {
+        display: true,
+        text: "Equity, Balance & Drawdown"
+      },
+      legend: {
+        position: "top"
+      }
     },
-    options: {
-      responsive: true,
-      plugins: {
+    scales: {
+      x: {
+        type: "linear",
         title: {
           display: true,
-          text: "Equity, Balance & Drawdown"
+          text: "Index"
         },
-        legend: {
-          position: "top"
+        ticks: {
+          stepSize: 1
         }
       },
-      scales: {
-        x: {
-          type: "linear",
-          title: {
-            display: true,
-            text: "Index"
-          },
-          ticks: {
-            stepSize: 1
-          }
+      y: {
+        type: "linear",
+        position: "left",
+        title: {
+          display: true,
+          text: "Kontostand"
         },
-        y: {
-          type: "linear",
-          position: "left",
-          title: {
-            display: true,
-            text: "Kontostand",
-            beginAtZero: false,
-            ticks: { autoSkip: true }
-          }
+        beginAtZero: false,
+        min: getMinWithPadding([...equity, ...balance]),
+        max: getMaxWithPadding([...equity, ...balance])
+      },
+      y1: {
+        type: "linear",
+        position: "right",
+        grid: {
+          drawOnChartArea: false
         },
-        y1: {
-          type: "linear",
-          position: "right",
-          grid: {
-            drawOnChartArea: false
-          },
-          title: {
-            display: true,
-            text: "Drawdown (%)",
-            beginAtZero: false,
-            ticks: { autoSkip: true }
-          }
-        }
+        title: {
+          display: true,
+          text: "Drawdown (%)"
+        },
+        beginAtZero: false,
+        min: getMinWithPadding(drawdown),
+        max: getMaxWithPadding(drawdown)
       }
     }
-  });
+  }
+});
+
 
   updateMonitoringStats(equity, balance, drawdown);
 }
