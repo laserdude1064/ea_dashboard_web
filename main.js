@@ -280,7 +280,8 @@ async function fetchData() {
 
   updateMonitoringStats(equity, balance, drawdown);
 }
-
+document.getElementById("toggle-time-axis-tab1").addEventListener("change", fetchData);
+ 
 async function fetchTradeHistory() {
   console.log("📦 Lade Daten aus 'ea_trades'...");
   const snapshot = await getDocs(collection(db, "ea_trades"));
@@ -329,7 +330,7 @@ async function fetchTradeHistory() {
 
   renderChartForRange(defaultStart, defaultEnd);
 }
-document.getElementById("toggle-time-axis-tab1").addEventListener("change", fetchData);
+
  
     let tradeList = [];
   let tradeChart = null;
