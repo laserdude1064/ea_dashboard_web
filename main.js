@@ -280,7 +280,7 @@ async function fetchData() {
 
   updateMonitoringStats(equity, balance, drawdown);
 }
-document.getElementById("toggle-time-axis-tab1").addEventListener("change", fetchData);
+document.getElementById("toggle-time-axis-live").addEventListener("change", fetchData);
  
 async function fetchTradeHistory() {
   console.log("📦 Lade Daten aus 'ea_trades'...");
