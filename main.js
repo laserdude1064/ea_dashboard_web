@@ -221,7 +221,9 @@ tab2Btn.addEventListener("click", () => showTab(2));
           position: "left",
           title: {
             display: true,
-            text: "Kontostand"
+            text: "Kontostand",
+            beginAtZero: false,
+            ticks: { autoSkip: true }
           }
         },
         y1: {
@@ -232,7 +234,9 @@ tab2Btn.addEventListener("click", () => showTab(2));
           },
           title: {
             display: true,
-            text: "Drawdown (%)"
+            text: "Drawdown (%)",
+            beginAtZero: false,
+            ticks: { autoSkip: true }
           }
         }
       }
