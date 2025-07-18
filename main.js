@@ -360,7 +360,7 @@ async function fetchTradeHistory() {
 
   try {
     const colRef = collection(db, "ea_status");
-    const q = query(colRef, orderBy("timestamp", "desc"));
+    const q = query(colRef, orderBy("received_at", "desc"));
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
