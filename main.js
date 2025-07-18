@@ -348,6 +348,7 @@ async function fetchTradeHistory() {
 
   // Feste Reihenfolge
   const fieldOrder = [
+    "symbol",
     "Buy_Condition_1", "Buy_Condition_2", "Buy_Condition_3", "Buy_Condition_4",
     "Buy_Condition_5", "Buy_Condition_6", "Buy_Condition_7",
     "Sell_Condition_1", "Sell_Condition_2", "Sell_Condition_3", "Sell_Condition_4",
