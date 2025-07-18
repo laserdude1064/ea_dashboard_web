@@ -37,6 +37,7 @@
       <div id="tabs">
         <button id="tab1-btn" class="active" type="button">Live-Daten</button>
         <button id="tab2-btn" type="button">Historische Trades</button>
+        <button id="tab3-btn" type="button">Payload-Daten</button>
         <button id="logout-button" style="float: right;">Logout</button>
       </div>
 
@@ -102,6 +103,19 @@
           <!-- Wird dynamisch gefüllt -->
         </tbody>
       </table>
+      </div>
+      <div id="tab3" class="tab-content" style="display: none;">
+        <h1>Payload-Details je EA</h1>
+        <table id="payload-table" border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr id="payload-header-row">
+              <!-- Spaltenüberschriften werden dynamisch gesetzt -->
+            </tr>
+          </thead>
+          <tbody id="payload-table-body">
+            <!-- Datenzeilen werden dynamisch befüllt -->
+          </tbody>
+        </table>
       </div>
     </div>
 
