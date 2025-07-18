@@ -344,7 +344,7 @@ const tableBody = document.querySelector("#payload-table-body");
   tableBody.innerHTML = "";
 
   try {
-    const colRef = collection(db, "ea_data"); // oder dynamisch je nach EA
+    const colRef = collection(db, "ea_status"); 
     const q = query(colRef, orderBy("timestamp", "desc"), limit(1));
     const snapshot = await getDocs(q);
 
