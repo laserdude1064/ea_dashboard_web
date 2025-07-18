@@ -88,6 +88,7 @@ tab3Btn.addEventListener("click", () => showTab(3));
       showTab(1);
       fetchData();
       fetchTradeHistory();
+      loadPayloadTableData();
     } else {
       loginSection.style.display = "block";
       contentSection.style.display = "none";
@@ -336,7 +337,38 @@ async function fetchTradeHistory() {
 
   renderChartForRange(defaultStart, defaultEnd);
 }
+//===== EA STATUS DATEN LADEN
+ async function loadPayloadTableData() {
+  console.log("📦 Lade Daten aus 'ea_status'...");
+  const tableBody = document.querySelector("#payload-table-body");
+  tableBody.innerHTML = "";
 
+  try {
+    const colRef = collection(db, "ea_status"); // Name deiner EA-Collection
+    const snapshot = await getDocs(colRef);
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${data.comment || ""}</td>
+        <td>${data.symbol || ""}</td>
+        <td>${data.equity?.toFixed(2) || ""}</td>
+        <td>${data.balance?.toFixed(2) || ""}</td>
+        <td>${data.drawdown?.toFixed(2) || ""}</td>
+        <td>${data.margin_level?.toFixed(2) || ""}</td>
+        <td>${data.open_positions || ""}</td>
+        <td>${data.timestamp || ""}</td>
+      `;
+
+      tableBody.appendChild(row);
+    });
+  } catch (error) {
+    console.error("Fehler beim Laden der Payload-Daten:", error);
+  }
+}
  
     let tradeList = [];
   let tradeChart = null;
