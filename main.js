@@ -337,7 +337,7 @@ async function fetchTradeHistory() {
 
   renderChartForRange(defaultStart, defaultEnd);
 }
-//===== EA STATUS DATEN LADEN
+//========================================================================= EA STATUS DATEN LADEN
  async function loadPayloadTableData() {
   console.log("📦 Lade Daten aus 'ea_status'...");
 const tableBody = document.querySelector("#payload-table-body");
@@ -375,8 +375,20 @@ const tableBody = document.querySelector("#payload-table-body");
 // Optional: Formatierung je nach Typ
 function formatValue(value) {
   if (typeof value === "number") return value.toFixed(2);
+  if (typeof value === "boolean") return value ? "✔️" : "❌";
   if (value instanceof Timestamp) return value.toDate().toLocaleString();
-  if (typeof value === "object") return JSON.stringify(value);
+
+  // Speziell für Arrays (z. B. BuyList/SellList)
+  if (Array.isArray(value)) {
+    return value.map(row => {
+      if (Array.isArray(row)) {
+        return "[" + row.map(v => parseFloat(v).toFixed(2)).join(", ") + "]";
+      }
+      return String(row);
+    }).join("<br>");
+  }
+
+  if (typeof value === "object" && value !== null) return JSON.stringify(value);
   return String(value);
 }
  
