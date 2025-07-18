@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
  
 console.log("📡 main.js geladen");
@@ -340,34 +340,44 @@ async function fetchTradeHistory() {
 //===== EA STATUS DATEN LADEN
  async function loadPayloadTableData() {
   console.log("📦 Lade Daten aus 'ea_status'...");
-  const tableBody = document.querySelector("#payload-table-body");
+const tableBody = document.querySelector("#payload-table-body");
   tableBody.innerHTML = "";
 
   try {
-    const colRef = collection(db, "ea_status"); // Name deiner EA-Collection
-    const snapshot = await getDocs(colRef);
+    const colRef = collection(db, "ea_data"); // oder dynamisch je nach EA
+    const q = query(colRef, orderBy("timestamp", "desc"), limit(1));
+    const snapshot = await getDocs(q);
 
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-
+    if (snapshot.empty) {
       const row = document.createElement("tr");
+      row.innerHTML = "<td colspan='2'>Keine Daten vorhanden</td>";
+      tableBody.appendChild(row);
+      return;
+    }
 
+    const doc = snapshot.docs[0];
+    const data = doc.data();
+
+    Object.entries(data).forEach(([key, value]) => {
+      const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${data.comment || ""}</td>
-        <td>${data.symbol || ""}</td>
-        <td>${data.equity?.toFixed(2) || ""}</td>
-        <td>${data.balance?.toFixed(2) || ""}</td>
-        <td>${data.drawdown?.toFixed(2) || ""}</td>
-        <td>${data.margin_level?.toFixed(2) || ""}</td>
-        <td>${data.open_positions || ""}</td>
-        <td>${data.timestamp || ""}</td>
+        <td style="text-align:left;"><strong>${key}</strong></td>
+        <td style="text-align:right;">${formatValue(value)}</td>
       `;
-
       tableBody.appendChild(row);
     });
+
   } catch (error) {
-    console.error("Fehler beim Laden der Payload-Daten:", error);
+    console.error("Fehler beim Laden des Payload-Datensatzes:", error);
   }
+}
+
+// Optional: Formatierung je nach Typ
+function formatValue(value) {
+  if (typeof value === "number") return value.toFixed(2);
+  if (value instanceof Timestamp) return value.toDate().toLocaleString();
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
 }
  
     let tradeList = [];
