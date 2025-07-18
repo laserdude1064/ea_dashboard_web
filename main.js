@@ -88,7 +88,7 @@ tab3Btn.addEventListener("click", () => showTab(3));
       showTab(1);
       fetchData();
       fetchTradeHistory();
-      loadPayloadTableData();
+      loadMultiEAStatusTable();
     } else {
       loginSection.style.display = "block";
       contentSection.style.display = "none";
@@ -338,6 +338,73 @@ async function fetchTradeHistory() {
   renderChartForRange(defaultStart, defaultEnd);
 }
 //========================================================================= EA STATUS DATEN LADEN
+ async function loadMultiEAStatusTable() {
+  console.log("📦 Lade alle letzten EA-Daten aus 'ea_status'...");
+
+  const tableBody = document.querySelector("#payload-table-body");
+  const tableHead = document.querySelector("#payload-table-head");
+  tableBody.innerHTML = "";
+  tableHead.innerHTML = "";
+
+  // Feste Reihenfolge
+  const fieldOrder = [
+    "Buy_Condition_1", "Buy_Condition_2", "Buy_Condition_3", "Buy_Condition_4",
+    "Buy_Condition_5", "Buy_Condition_6", "Buy_Condition_7",
+    "Sell_Condition_1", "Sell_Condition_2", "Sell_Condition_3", "Sell_Condition_4",
+    "Sell_Condition_5", "Sell_Condition_6", "Sell_Condition_7",
+    "buyTTP", "sellTTP", "TTPaction",
+    "TimeFilterActive", "RejectionActiveBuy", "RejectionActiveSell",
+    "AntiGridActiveBuy", "AntiGridActiveSell", "LossLotsActive",
+    "buy_count", "sell_count", "BuyList", "SellList"
+  ];
+
+  try {
+    const colRef = collection(db, "ea_status");
+    const q = query(colRef, orderBy("timestamp", "desc"));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      const row = document.createElement("tr");
+      row.innerHTML = "<td colspan='100%'>Keine Daten vorhanden</td>";
+      tableBody.appendChild(row);
+      return;
+    }
+
+    // Gruppiere Datensätze nach EA-Kommentar, nur der neueste zählt
+    const latestByComment = {};
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const comment = data.comment || "unbekannt";
+      if (!(comment in latestByComment)) {
+        latestByComment[comment] = data;
+      }
+    });
+
+    const eaNames = Object.keys(latestByComment);
+
+    // Tabellenkopf dynamisch erzeugen
+    const headRow = document.createElement("tr");
+    headRow.innerHTML = `<th>Parameter</th>` + eaNames.map(name => `<th>${name}</th>`).join("");
+    tableHead.appendChild(headRow);
+
+    // Tabellenzeilen pro Parameter
+    fieldOrder.forEach(field => {
+      const row = document.createElement("tr");
+      row.innerHTML = `<td><strong>${field}</strong></td>`;
+
+      eaNames.forEach(name => {
+        const eaData = latestByComment[name];
+        const value = eaData[field] !== undefined ? formatValue(eaData[field]) : "-";
+        row.innerHTML += `<td style="text-align:right;">${value}</td>`;
+      });
+
+      tableBody.appendChild(row);
+    });
+
+  } catch (error) {
+    console.error("Fehler beim Laden der EA-Statusdaten:", error);
+  }
+}
 async function loadPayloadTableData() {
   console.log("📦 Lade Daten aus 'ea_status'...");
   const tableBody = document.querySelector("#payload-table-body");
