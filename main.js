@@ -388,8 +388,21 @@ async function fetchTradeHistory() {
     headRow.innerHTML = `<th>Parameter</th>` + eaNames.map(name => `<th>${name}</th>`).join("");
     tableHead.appendChild(headRow);
 
-    // Tabellenzeilen pro Parameter
-    fieldOrder.forEach(field => {
+     // Zusätzliche Felder sammeln (nicht in fieldOrder)
+    const extraFields = new Set();
+    for (const data of Object.values(latestByComment)) {
+      Object.keys(data).forEach(field => {
+        if (!fieldOrder.includes(field) && field !== "timestamp" && field !== "comment") {
+          extraFields.add(field);
+        }
+      });
+    }
+
+    // Kombiniere Felder in endgültiger Reihenfolge
+    const allFields = [...fieldOrder, ...Array.from(extraFields).sort()];
+
+    // Tabellenzeilen erzeugen
+    allFields.forEach(field => {
       const row = document.createElement("tr");
       row.innerHTML = `<td><strong>${field}</strong></td>`;
 
@@ -406,71 +419,6 @@ async function fetchTradeHistory() {
     console.error("Fehler beim Laden der EA-Statusdaten:", error);
   }
 }
-async function loadPayloadTableData() {
-  console.log("📦 Lade Daten aus 'ea_status'...");
-  const tableBody = document.querySelector("#payload-table-body");
-  tableBody.innerHTML = "";
-
-  // Feste Reihenfolge
-  const fieldOrder = [
-    "Buy_Condition_1", "Buy_Condition_2", "Buy_Condition_3", "Buy_Condition_4",
-    "Buy_Condition_5", "Buy_Condition_6", "Buy_Condition_7",
-    "Sell_Condition_1", "Sell_Condition_2", "Sell_Condition_3", "Sell_Condition_4",
-    "Sell_Condition_5", "Sell_Condition_6", "Sell_Condition_7",
-
-    "buyTTP", "sellTTP", "TTPaction",
-    "TimeFilterActive", "RejectionActiveBuy", "RejectionActiveSell",
-    "AntiGridActiveBuy", "AntiGridActiveSell", "LossLotsActive",
-
-    "buy_count", "sell_count", "BuyList", "SellList"
-  ];
-
-  try {
-    const colRef = collection(db, "ea_status"); 
-    const q = query(colRef, orderBy("received_at", "desc"), limit(1));
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
-      const row = document.createElement("tr");
-      row.innerHTML = "<td colspan='2'>Keine Daten vorhanden</td>";
-      tableBody.appendChild(row);
-      return;
-    }
-
-    const doc = snapshot.docs[0];
-    const data = doc.data();
-
-    // Feste Reihenfolge zuerst
-    fieldOrder.forEach(key => {
-      if (key in data) {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td style="text-align:left;"><strong>${key}</strong></td>
-          <td style="text-align:right;">${formatValue(data[key])}</td>
-        `;
-        tableBody.appendChild(row);
-      }
-    });
-
-    // Alle übrigen Felder alphabetisch sortiert anhängen
-    const remainingKeys = Object.keys(data)
-      .filter(k => !fieldOrder.includes(k))
-      .sort();
-
-    remainingKeys.forEach(key => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td style="text-align:left;"><strong>${key}</strong></td>
-        <td style="text-align:right;">${formatValue(data[key])}</td>
-      `;
-      tableBody.appendChild(row);
-    });
-
-  } catch (error) {
-    console.error("Fehler beim Laden des Payload-Datensatzes:", error);
-  }
-}
-
 
 // Optional: Formatierung je nach Typ
 function formatValue(value) {
