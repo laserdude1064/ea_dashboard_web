@@ -359,7 +359,7 @@ async function loadPayloadTableData() {
 
   try {
     const colRef = collection(db, "ea_status"); 
-    const q = query(colRef, orderBy("timestamp", "desc"), limit(1));
+    const q = query(colRef, orderBy("received_at", "desc"), limit(1));
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
