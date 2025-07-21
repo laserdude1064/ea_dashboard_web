@@ -421,43 +421,40 @@ async function fetchTradeHistory() {
 
 // Optional: Formatierung je nach Typ
 function formatValue(value) {
-  if (typeof value === "number") return value.toFixed(2);
-  if (typeof value === "boolean") return value ? "✔️" : "❌";
-
   if (typeof Timestamp !== "undefined" && value instanceof Timestamp) {
     return value.toDate().toLocaleString();
   }
 
+  // Arrays von Objekten
   if (Array.isArray(value)) {
     if (value.length > 0 && typeof value[0] === "object" && value[0] !== null) {
       return value.map(obj => {
         const items = Object.entries(obj)
-          .map(([k, v]) => {
-            const num = parseFloat(v);
-            return `${k}:${isNaN(num) ? v : num.toFixed(2)}`;
-          })
+          .map(([k, v]) => `${k}:${v}`)
           .join(", ");
         return `<div style="white-space: nowrap;">{ ${items} }</div>`;
       }).join("<br>");
     }
 
+    // Arrays von Arrays oder einfachen Werten
     return value.map(row => {
       if (Array.isArray(row)) {
-        return "[" + row.map(v => {
-          const num = parseFloat(v);
-          return isNaN(num) ? v : num.toFixed(2);
-        }).join(", ") + "]";
+        return "[" + row.map(v => String(v)).join(", ") + "]";
       }
       return String(row);
     }).join("<br>");
   }
 
-  if (typeof value === "object" && value !== null) return JSON.stringify(value);
+  // Objekte (kein Array, kein Timestamp)
+  if (typeof value === "object" && value !== null) {
+    return JSON.stringify(value);
+  }
+
+  // Alle anderen Typen (Zahlen, Booleans, Strings)
   return String(value);
 }
-
  
-    let tradeList = [];
+  let tradeList = [];
   let tradeChart = null;
   let useTimeAxis = false;
  function renderChartForRange(startDate, endDate) {
