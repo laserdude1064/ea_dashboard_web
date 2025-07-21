@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     appId: "1:602990579998:web:c6775bcae19a8afba5b90f"
   };
 
-  const app = initializeApp(firebaseConfig);
+  const app = initializeApp(firebaseConfig); 
   const db = getFirestore(app);
   const auth = getAuth(app);
 
