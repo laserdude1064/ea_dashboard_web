@@ -146,7 +146,7 @@ tab3Btn.addEventListener("click", () => showTab(3));
     }
   }
 
-  // ============ Trade-Daten laden ============
+  // ===================================================================================== Trade-Daten laden ============
 async function fetchData() {
   console.log("🔍 Lade Daten aus 'ea_monitoring'...");
   const snapshot = await getDocs(collection(db, "ea_monitoring"));
