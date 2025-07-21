@@ -432,36 +432,38 @@ function formatValue(value) {
       // Nach time sortieren (älteste zuerst)
       value.sort((a, b) => (a.time || 0) - (b.time || 0));
 
-      // Für jedes Objekt eine eigene einklappbare Mini-Tabelle
-      return value.map(obj => {
-        const rows = keyOrder.map(key => {
+      // Tabellen-Header mit den Keys
+      const headers = keyOrder.map(key => `<th style="padding: 2px 6px; text-align: left;">${key}</th>`).join("");
+
+      // Eine Zeile pro Objekt mit den Werten
+      const rows = value.map(obj => {
+        const cells = keyOrder.map(key => {
           let val = obj[key];
 
-          // Zeit formatieren
+          // Zeit umwandeln
           if (key === "time" && typeof val === "number") {
             val = new Date(val * 1000).toLocaleString();
           }
 
-          // Booleans in Emoji
+          // Boolean in Emoji
           if (typeof val === "boolean") {
             val = val ? "✅" : "❌";
           }
 
-          return `
-            <tr>
-              <td style="padding: 2px 6px; font-weight: bold;">${key}</td>
-              <td style="padding: 2px 6px;">${val !== undefined ? val : ""}</td>
-            </tr>`;
+          return `<td style="padding: 2px 6px;">${val !== undefined ? val : ""}</td>`;
         }).join("");
-
-        return `
-          <details style="margin-bottom: 4px;">
-            <summary style="cursor: pointer; font-size: 0.85em; color: #007acc;">Details anzeigen</summary>
-            <table style="border-collapse: collapse; font-size: 0.8em; margin-top: 4px;">
-              ${rows}
-            </table>
-          </details>`;
+        return `<tr>${cells}</tr>`;
       }).join("");
+
+      // Komplettes Table innerhalb von <details>
+      return `
+        <details style="margin-bottom: 4px;">
+          <summary style="cursor: pointer; font-size: 0.85em; color: #007acc;">Details anzeigen</summary>
+          <table style="border-collapse: collapse; font-size: 0.8em; margin-top: 4px;">
+            <thead><tr>${headers}</tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </details>`;
     }
 
     // Arrays von Arrays oder einfachen Werten
@@ -481,13 +483,14 @@ function formatValue(value) {
     return JSON.stringify(value);
   }
 
-  // Booleans außerhalb von Arrays/Objekten
+  // Einzelner Boolean
   if (typeof value === "boolean") {
     return value ? "✅" : "❌";
   }
 
   return String(value);
 }
+
 
 
  
