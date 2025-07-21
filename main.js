@@ -421,12 +421,6 @@ async function fetchTradeHistory() {
 
 // Optional: Formatierung je nach Typ
 function formatValue(value) {
-  if (typeof Timestamp !== "undefined" && value instanceof Timestamp) {
-    return value.toDate().toLocaleString();
-  }
-
-  // Arrays von Objekten (mit Zeitstempel)
-function formatValue(value) {
   const keyOrder = ["time", "ticket", "volume", "open", "tp", "sl", "swap"];
 
   if (typeof Timestamp !== "undefined" && value instanceof Timestamp) {
@@ -467,7 +461,6 @@ function formatValue(value) {
 
   return String(value);
 }
-
 
  
   let tradeList = [];
