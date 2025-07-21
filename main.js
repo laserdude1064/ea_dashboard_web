@@ -432,16 +432,35 @@ function formatValue(value) {
       // Nach time sortieren (älteste zuerst)
       value.sort((a, b) => (a.time || 0) - (b.time || 0));
 
-      // Für jedes Objekt eine eigene Mini-Tabelle
+      // Für jedes Objekt eine eigene einklappbare Mini-Tabelle
       return value.map(obj => {
         const rows = keyOrder.map(key => {
           let val = obj[key];
+
+          // Zeit formatieren
           if (key === "time" && typeof val === "number") {
             val = new Date(val * 1000).toLocaleString();
           }
-          return `<tr><td style="padding:2px; font-weight:bold;">${key}</td><td style="padding:2px;">${val !== undefined ? val : ""}</td></tr>`;
+
+          // Booleans in Emoji
+          if (typeof val === "boolean") {
+            val = val ? "✅" : "❌";
+          }
+
+          return `
+            <tr>
+              <td style="padding: 2px 6px; font-weight: bold;">${key}</td>
+              <td style="padding: 2px 6px;">${val !== undefined ? val : ""}</td>
+            </tr>`;
         }).join("");
-        return `<table style="border-collapse: collapse; margin-bottom:4px; font-size: 0.8em;">${rows}</table>`;
+
+        return `
+          <details style="margin-bottom: 4px;">
+            <summary style="cursor: pointer; font-size: 0.85em; color: #007acc;">Details anzeigen</summary>
+            <table style="border-collapse: collapse; font-size: 0.8em; margin-top: 4px;">
+              ${rows}
+            </table>
+          </details>`;
       }).join("");
     }
 
@@ -450,17 +469,26 @@ function formatValue(value) {
       if (Array.isArray(row)) {
         return "[" + row.map(v => String(v)).join(", ") + "]";
       }
+      if (typeof row === "boolean") {
+        return row ? "✅" : "❌";
+      }
       return String(row);
     }).join("<br>");
   }
 
-  // Einzelne Objekte (kein Array, kein Timestamp)
+  // Einzelne Objekte
   if (typeof value === "object" && value !== null) {
     return JSON.stringify(value);
   }
 
+  // Booleans außerhalb von Arrays/Objekten
+  if (typeof value === "boolean") {
+    return value ? "✅" : "❌";
+  }
+
   return String(value);
 }
+
 
  
   let tradeList = [];
