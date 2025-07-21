@@ -424,35 +424,39 @@ async function fetchTradeHistory() {
 function formatValue(value) {
   if (typeof value === "number") return value.toFixed(2);
   if (typeof value === "boolean") return value ? "✔️" : "❌";
-  if (value instanceof Timestamp) return value.toDate().toLocaleString();
 
-  // Speziell für Arrays (z. B. BuyList/SellList)
-if (Array.isArray(value)) {
-  // Prüfen, ob es sich um ein Array von Objekten handelt
-  if (value.length > 0 && typeof value[0] === "object" && value[0] !== null) {
-    return value.map(obj => {
-      const items = Object.entries(obj)
-        .map(([k, v]) => {
-           const num = parseFloat(v);
-           return `${k}:${isNaN(num) ? v : num.toFixed(2)}`;
-         })
-        .join(", ");
-      return `<div style="white-space: nowrap;">{ ${items} }</div>`;
-    }).join("<br>");
+  if (typeof Timestamp !== "undefined" && value instanceof Timestamp) {
+    return value.toDate().toLocaleString();
   }
 
-  // Fallback für einfache Arrays oder Arrays von Arrays
-  return value.map(row => {
-    if (Array.isArray(row)) {
-      return "[" + row.map(v => parseFloat(v).toFixed(2)).join(", ") + "]";
+  if (Array.isArray(value)) {
+    if (value.length > 0 && typeof value[0] === "object" && value[0] !== null) {
+      return value.map(obj => {
+        const items = Object.entries(obj)
+          .map(([k, v]) => {
+            const num = parseFloat(v);
+            return `${k}:${isNaN(num) ? v : num.toFixed(2)}`;
+          })
+          .join(", ");
+        return `<div style="white-space: nowrap;">{ ${items} }</div>`;
+      }).join("<br>");
     }
-    return String(row);
-  }).join("<br>");
-}
+
+    return value.map(row => {
+      if (Array.isArray(row)) {
+        return "[" + row.map(v => {
+          const num = parseFloat(v);
+          return isNaN(num) ? v : num.toFixed(2);
+        }).join(", ") + "]";
+      }
+      return String(row);
+    }).join("<br>");
+  }
 
   if (typeof value === "object" && value !== null) return JSON.stringify(value);
   return String(value);
 }
+
  
     let tradeList = [];
   let tradeChart = null;
