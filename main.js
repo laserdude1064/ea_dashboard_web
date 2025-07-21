@@ -427,14 +427,25 @@ function formatValue(value) {
   if (value instanceof Timestamp) return value.toDate().toLocaleString();
 
   // Speziell für Arrays (z. B. BuyList/SellList)
-  if (Array.isArray(value)) {
-    return value.map(row => {
-      if (Array.isArray(row)) {
-        return "[" + row.map(v => parseFloat(v).toFixed(2)).join(", ") + "]";
-      }
-      return String(row);
+if (Array.isArray(value)) {
+  // Prüfen, ob es sich um ein Array von Objekten handelt
+  if (value.length > 0 && typeof value[0] === "object" && value[0] !== null) {
+    return value.map(obj => {
+      const items = Object.entries(obj)
+        .map(([k, v]) => `${k}:${parseFloat(v).toFixed(2)}`)
+        .join(", ");
+      return `<div style="white-space: nowrap;">{ ${items} }</div>`;
     }).join("<br>");
   }
+
+  // Fallback für einfache Arrays oder Arrays von Arrays
+  return value.map(row => {
+    if (Array.isArray(row)) {
+      return "[" + row.map(v => parseFloat(v).toFixed(2)).join(", ") + "]";
+    }
+    return String(row);
+  }).join("<br>");
+}
 
   if (typeof value === "object" && value !== null) return JSON.stringify(value);
   return String(value);
