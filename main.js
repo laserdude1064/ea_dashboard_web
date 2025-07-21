@@ -432,7 +432,10 @@ if (Array.isArray(value)) {
   if (value.length > 0 && typeof value[0] === "object" && value[0] !== null) {
     return value.map(obj => {
       const items = Object.entries(obj)
-        .map(([k, v]) => `${k}:${parseFloat(v).toFixed(2)}`)
+        .map(([k, v]) => {
+           const num = parseFloat(v);
+           return `${k}:${isNaN(num) ? v : num.toFixed(2)}`;
+         })
         .join(", ");
       return `<div style="white-space: nowrap;">{ ${items} }</div>`;
     }).join("<br>");
