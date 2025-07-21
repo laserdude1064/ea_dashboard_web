@@ -425,15 +425,34 @@ function formatValue(value) {
     return value.toDate().toLocaleString();
   }
 
-  // Arrays von Objekten
+  // Arrays von Objekten (mit Zeitstempel)
   if (Array.isArray(value)) {
     if (value.length > 0 && typeof value[0] === "object" && value[0] !== null) {
-      return value.map(obj => {
-        const items = Object.entries(obj)
-          .map(([k, v]) => `${k}:${v}`)
-          .join(", ");
-        return `<div style="white-space: nowrap;">{ ${items} }</div>`;
-      }).join("<br>");
+      // Alle Keys sammeln (vereinheitlicht über alle Objekte)
+      const keys = [...new Set(value.flatMap(obj => Object.keys(obj)))];
+
+      // Sortieren nach time (falls vorhanden)
+      value.sort((a, b) => (a.time || 0) - (b.time || 0));
+
+      // Tabellenkopf
+      const header = `<tr>${keys.map(k => `<th style="padding:2px">${k}</th>`).join('')}</tr>`;
+
+      // Tabellenzeilen
+      const rows = value.map(obj => {
+        const row = keys.map(k => {
+          let val = obj[k];
+          if (k === "time" && typeof val === "number") {
+            // Von Sekunden in Millisekunden und dann Datum konvertieren
+            const date = new Date(val * 1000);
+            val = date.toLocaleString();
+          }
+          return `<td style="padding:2px">${val !== undefined ? val : ""}</td>`;
+        }).join('');
+        return `<tr>${row}</tr>`;
+      });
+
+      // Ganze Tabelle zurückgeben
+      return `<table style="border-collapse: collapse; font-size: 0.8em;">${header}${rows.join('')}</table>`;
     }
 
     // Arrays von Arrays oder einfachen Werten
@@ -445,7 +464,7 @@ function formatValue(value) {
     }).join("<br>");
   }
 
-  // Objekte (kein Array, kein Timestamp)
+  // Einzelne Objekte (kein Array, kein Timestamp)
   if (typeof value === "object" && value !== null) {
     return JSON.stringify(value);
   }
@@ -453,6 +472,7 @@ function formatValue(value) {
   // Alle anderen Typen (Zahlen, Booleans, Strings)
   return String(value);
 }
+
  
   let tradeList = [];
   let tradeChart = null;
