@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, query, orderBy, limit, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, query, orderBy, limit, Timestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
  
 console.log("📡 main.js geladen");
@@ -89,6 +89,7 @@ tab3Btn.addEventListener("click", () => showTab(3));
       fetchData();
       fetchTradeHistory();
       loadMultiEAStatusTable();
+      watchMultiEAStatusTable();
     } else {
       loginSection.style.display = "block";
       contentSection.style.display = "none";
@@ -337,15 +338,12 @@ async function fetchTradeHistory() {
   renderChartForRange(defaultStart, defaultEnd);
 }
 //========================================================================= EA STATUS DATEN LADEN
- async function loadMultiEAStatusTable() {
-  console.log("📦 Lade alle letzten EA-Daten aus 'ea_status'...");
-
+function renderMultiEAStatusTable(dataList) {
   const tableBody = document.querySelector("#payload-table-body");
   const tableHead = document.querySelector("#payload-table-head");
   tableBody.innerHTML = "";
   tableHead.innerHTML = "";
 
-  // Feste Reihenfolge
   const fieldOrder = [
     "symbol", "TimeFilterActive", "buy_count", "sell_count",
     "Buy_BB", "Buy_RSI", "Buy_MACD", "Buy_margin",
@@ -358,67 +356,59 @@ async function fetchTradeHistory() {
     "BuyList", "SellList"
   ];
 
-  try {
-    const colRef = collection(db, "ea_status");
-    const q = query(colRef, orderBy("received_at", "desc"));
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
-      const row = document.createElement("tr");
-      row.innerHTML = "<td colspan='100%'>Keine Daten vorhanden</td>";
-      tableBody.appendChild(row);
-      return;
+  // Gruppieren: nur der neueste pro comment
+  const latestByComment = {};
+  dataList.forEach(data => {
+    const comment = data.comment || "unbekannt";
+    if (!(comment in latestByComment)) {
+      latestByComment[comment] = data;
     }
+  });
 
-    // Gruppiere Datensätze nach EA-Kommentar, nur der neueste zählt
-    const latestByComment = {};
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const comment = data.comment || "unbekannt";
-      if (!(comment in latestByComment)) {
-        latestByComment[comment] = data;
+  const eaNames = Object.keys(latestByComment);
+
+  const headRow = document.createElement("tr");
+  headRow.innerHTML = `<th>Parameter</th>` + eaNames.map(name => `<th>${name}</th>`).join("");
+  tableHead.appendChild(headRow);
+
+  const extraFields = new Set();
+  Object.values(latestByComment).forEach(data => {
+    Object.keys(data).forEach(field => {
+      if (!fieldOrder.includes(field) && field !== "timestamp" && field !== "comment") {
+        extraFields.add(field);
       }
     });
+  });
 
-    const eaNames = Object.keys(latestByComment);
+  const allFields = [...fieldOrder, ...Array.from(extraFields).sort()];
 
-    // Tabellenkopf dynamisch erzeugen
-    const headRow = document.createElement("tr");
-    headRow.innerHTML = `<th>Parameter</th>` + eaNames.map(name => `<th>${name}</th>`).join("");
-    tableHead.appendChild(headRow);
-
-     // Zusätzliche Felder sammeln (nicht in fieldOrder)
-    const extraFields = new Set();
-    for (const data of Object.values(latestByComment)) {
-      Object.keys(data).forEach(field => {
-        if (!fieldOrder.includes(field) && field !== "timestamp" && field !== "comment") {
-          extraFields.add(field);
-        }
-      });
-    }
-
-    // Kombiniere Felder in endgültiger Reihenfolge
-    const allFields = [...fieldOrder, ...Array.from(extraFields).sort()];
-
-    // Tabellenzeilen erzeugen
-    allFields.forEach(field => {
-      const row = document.createElement("tr");
-      row.innerHTML = `<td><strong>${field}</strong></td>`;
-
-      eaNames.forEach(name => {
-        const eaData = latestByComment[name];
-        const value = eaData[field] !== undefined ? formatValue(eaData[field]) : "-";
-        row.innerHTML += `<td style="text-align:right;">${value}</td>`;
-      });
-
-      tableBody.appendChild(row);
+  allFields.forEach(field => {
+    const row = document.createElement("tr");
+    row.innerHTML = `<td><strong>${field}</strong></td>`;
+    eaNames.forEach(name => {
+      const eaData = latestByComment[name];
+      const value = eaData[field] !== undefined ? formatValue(eaData[field]) : "-";
+      row.innerHTML += `<td style="text-align:right;">${value}</td>`;
     });
-
-  } catch (error) {
-    console.error("Fehler beim Laden der EA-Statusdaten:", error);
-  }
+    tableBody.appendChild(row);
+  });
 }
+async function loadMultiEAStatusTable() {
+  const colRef = collection(db, "ea_status");
+  const q = query(colRef, orderBy("received_at", "desc"));
+  const snapshot = await getDocs(q);
+  const dataList = snapshot.docs.map(doc => doc.data());
+  renderMultiEAStatusTable(dataList);
+}
+function watchMultiEAStatusTable() {
+  const colRef = collection(db, "ea_status");
+  const q = query(colRef, orderBy("received_at", "desc"));
 
+  onSnapshot(q, snapshot => {
+    const dataList = snapshot.docs.map(doc => doc.data());
+    renderMultiEAStatusTable(dataList);
+  });
+}
 // Optional: Formatierung je nach Typ
 function formatValue(value) {
   const keyOrder = ["time", "ticket", "volume", "open", "tp", "sl", "swap"];
@@ -426,7 +416,7 @@ function formatValue(value) {
   if (typeof Timestamp !== "undefined" && value instanceof Timestamp) {
     return value.toDate().toLocaleString();
   }
-
+  if (value === null || value === undefined) return "-";
   if (Array.isArray(value)) {
     if (value.length > 0 && typeof value[0] === "object" && value[0] !== null) {
       // Nach time sortieren (älteste zuerst)
