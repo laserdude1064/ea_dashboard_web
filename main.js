@@ -426,33 +426,29 @@ function formatValue(value) {
   }
 
   // Arrays von Objekten (mit Zeitstempel)
+function formatValue(value) {
+  const keyOrder = ["time", "ticket", "volume", "open", "tp", "sl", "swap"];
+
+  if (typeof Timestamp !== "undefined" && value instanceof Timestamp) {
+    return value.toDate().toLocaleString();
+  }
+
   if (Array.isArray(value)) {
     if (value.length > 0 && typeof value[0] === "object" && value[0] !== null) {
-      // Alle Keys sammeln (vereinheitlicht über alle Objekte)
-      const keys = [...new Set(value.flatMap(obj => Object.keys(obj)))];
-
-      // Sortieren nach time (falls vorhanden)
+      // Nach time sortieren (älteste zuerst)
       value.sort((a, b) => (a.time || 0) - (b.time || 0));
 
-      // Tabellenkopf
-      const header = `<tr>${keys.map(k => `<th style="padding:2px">${k}</th>`).join('')}</tr>`;
-
-      // Tabellenzeilen
-      const rows = value.map(obj => {
-        const row = keys.map(k => {
-          let val = obj[k];
-          if (k === "time" && typeof val === "number") {
-            // Von Sekunden in Millisekunden und dann Datum konvertieren
-            const date = new Date(val * 1000);
-            val = date.toLocaleString();
+      // Für jedes Objekt eine eigene Mini-Tabelle
+      return value.map(obj => {
+        const rows = keyOrder.map(key => {
+          let val = obj[key];
+          if (key === "time" && typeof val === "number") {
+            val = new Date(val * 1000).toLocaleString();
           }
-          return `<td style="padding:2px">${val !== undefined ? val : ""}</td>`;
-        }).join('');
-        return `<tr>${row}</tr>`;
-      });
-
-      // Ganze Tabelle zurückgeben
-      return `<table style="border-collapse: collapse; font-size: 0.8em;">${header}${rows.join('')}</table>`;
+          return `<tr><td style="padding:2px; font-weight:bold;">${key}</td><td style="padding:2px;">${val !== undefined ? val : ""}</td></tr>`;
+        }).join("");
+        return `<table style="border-collapse: collapse; margin-bottom:4px; font-size: 0.8em;">${rows}</table>`;
+      }).join("");
     }
 
     // Arrays von Arrays oder einfachen Werten
@@ -469,9 +465,9 @@ function formatValue(value) {
     return JSON.stringify(value);
   }
 
-  // Alle anderen Typen (Zahlen, Booleans, Strings)
   return String(value);
 }
+
 
  
   let tradeList = [];
