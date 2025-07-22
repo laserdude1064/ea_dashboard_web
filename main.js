@@ -356,21 +356,20 @@ function renderMultiEAStatusTable(dataList) {
     "BuyList", "SellList"
   ];
 
-   const eaNames = dataList.map(entry => entry.comment || "unbekannt");
+  const eaNames = dataList.map(entry => entry.comment || "unbekannt");
 
   const headRow = document.createElement("tr");
   headRow.innerHTML = `<th>Parameter</th>` + eaNames.map(name => `<th>${name}</th>`).join("");
   tableHead.appendChild(headRow);
 
   const extraFields = new Set();
-  Object.values(latestByComment).forEach(data => {
+  dataList.forEach(data => {
     Object.keys(data).forEach(field => {
       if (!fieldOrder.includes(field) && field !== "timestamp" && field !== "comment") {
         extraFields.add(field);
       }
     });
   });
-
   const allFields = [...fieldOrder, ...Array.from(extraFields).sort()];
 
   allFields.forEach(field => {
