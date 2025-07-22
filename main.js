@@ -389,16 +389,43 @@ function renderMultiEAStatusTable(dataList) {
   });
   const allFields = [...fieldOrder, ...Array.from(extraFields).sort()];
 
-  // Zeilen schreiben
-  allFields.forEach(field => {
-    const row = document.createElement("tr");
-    row.innerHTML = `<td><strong>${field}</strong></td>`;
-    eaEntries.forEach(([name, eaData]) => {
-      const value = eaData[field] !== undefined ? formatValue(eaData[field]) : "-";
-      row.innerHTML += `<td style="text-align:right;">${value}</td>`;
-    });
-    tableBody.appendChild(row);
-  });
+ // Zeilen schreiben
+ allFields.forEach(field => {
+   const row = document.createElement("tr");
+   row.innerHTML = `<td><strong>${field}</strong></td>`;
+ 
+   eaEntries.forEach(([name, eaData]) => {
+     let value = "-";
+     let cellStyle = "text-align:right;";
+ 
+     if (eaData[field] !== undefined) {
+       // Spezielle Behandlung für received_at
+       if (field === "received_at") {
+         const date = new Date(eaData[field]);
+         const now = new Date();
+         const diffMs = now - date;
+         const diffMin = diffMs / 1000 / 60;
+ 
+         const h = String(date.getHours()).padStart(2, '0');
+         const m = String(date.getMinutes()).padStart(2, '0');
+         const s = String(date.getSeconds()).padStart(2, '0');
+ 
+         value = `${h}:${m}:${s}`;
+ 
+         if (diffMin > 5) {
+           cellStyle += "background-color:#FFEB3B;";
+         }
+       } else {
+         value = formatValue(eaData[field]);
+       }
+     }
+ 
+     row.innerHTML += `<td style="${cellStyle}">${value}</td>`;
+   });
+ 
+   tableBody.appendChild(row);
+ });
+
 }
 
 async function loadMultiEAStatusTable() {
