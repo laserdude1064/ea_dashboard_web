@@ -406,6 +406,9 @@ function formatValue(value) {
   }
   if (value === null || value === undefined) return "-";
   if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return "-";
+    }
     if (value.length > 0 && typeof value[0] === "object" && value[0] !== null) {
       // Nach time sortieren (älteste zuerst)
       value.sort((a, b) => (a.time || 0) - (b.time || 0));
