@@ -356,14 +356,31 @@ function renderMultiEAStatusTable(dataList) {
     "BuyList", "SellList"
   ];
 
-  const eaNames = dataList.map(entry => entry.comment || "unbekannt");
+  const latestByComment = {};
+  dataList.forEach(data => {
+    const comment = data.comment || "unbekannt";
+    if (!(comment in latestByComment)) {
+      latestByComment[comment] = data;
+    }
+  });
 
+  const eaEntries = Object.entries(latestByComment);
+  eaEntries.sort((a, b) => {
+    const aVal = a[1].TimeFilterActive ? 1 : 0;
+    const bVal = b[1].TimeFilterActive ? 1 : 0;
+    return aVal - bVal;
+  });
+
+  const eaNames = eaEntries.map(([name]) => name);
+
+  // Tabellenkopf
   const headRow = document.createElement("tr");
   headRow.innerHTML = `<th>Parameter</th>` + eaNames.map(name => `<th>${name}</th>`).join("");
   tableHead.appendChild(headRow);
 
+  // Zusätzliche Felder erfassen
   const extraFields = new Set();
-  dataList.forEach(data => {
+  Object.values(latestByComment).forEach(data => {
     Object.keys(data).forEach(field => {
       if (!fieldOrder.includes(field) && field !== "timestamp" && field !== "comment") {
         extraFields.add(field);
@@ -372,16 +389,18 @@ function renderMultiEAStatusTable(dataList) {
   });
   const allFields = [...fieldOrder, ...Array.from(extraFields).sort()];
 
+  // Zeilen schreiben
   allFields.forEach(field => {
     const row = document.createElement("tr");
     row.innerHTML = `<td><strong>${field}</strong></td>`;
-    dataList.forEach(eaData => {
+    eaEntries.forEach(([name, eaData]) => {
       const value = eaData[field] !== undefined ? formatValue(eaData[field]) : "-";
       row.innerHTML += `<td style="text-align:right;">${value}</td>`;
     });
     tableBody.appendChild(row);
   });
 }
+
 async function loadMultiEAStatusTable() {
   const colRef = collection(db, "ea_status");
   const snapshot = await getDocs(colRef);
