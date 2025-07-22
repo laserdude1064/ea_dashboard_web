@@ -356,15 +356,6 @@ function renderMultiEAStatusTable(dataList) {
     "BuyList", "SellList"
   ];
 
-  // Gruppieren: nur der neueste pro comment
-  const latestByComment = {};
-  dataList.forEach(data => {
-    const comment = data.comment || "unbekannt";
-    if (!(comment in latestByComment)) {
-      latestByComment[comment] = data;
-    }
-  });
-
   const eaNames = Object.keys(latestByComment);
 
   const headRow = document.createElement("tr");
@@ -385,8 +376,7 @@ function renderMultiEAStatusTable(dataList) {
   allFields.forEach(field => {
     const row = document.createElement("tr");
     row.innerHTML = `<td><strong>${field}</strong></td>`;
-    eaNames.forEach(name => {
-      const eaData = latestByComment[name];
+    dataList.forEach(eaData => {
       const value = eaData[field] !== undefined ? formatValue(eaData[field]) : "-";
       row.innerHTML += `<td style="text-align:right;">${value}</td>`;
     });
@@ -395,16 +385,15 @@ function renderMultiEAStatusTable(dataList) {
 }
 async function loadMultiEAStatusTable() {
   const colRef = collection(db, "ea_status");
-  const q = query(colRef, orderBy("received_at", "desc"));
-  const snapshot = await getDocs(q);
+  const snapshot = await getDocs(colRef);
   const dataList = snapshot.docs.map(doc => doc.data());
   renderMultiEAStatusTable(dataList);
 }
+
 function watchMultiEAStatusTable() {
   const colRef = collection(db, "ea_status");
-  const q = query(colRef, orderBy("received_at", "desc"));
 
-  onSnapshot(q, snapshot => {
+  onSnapshot(colRef, snapshot => {
     const dataList = snapshot.docs.map(doc => doc.data());
     renderMultiEAStatusTable(dataList);
   });
