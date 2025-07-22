@@ -356,7 +356,7 @@ function renderMultiEAStatusTable(dataList) {
     "BuyList", "SellList"
   ];
 
-  const eaNames = Object.keys(latestByComment);
+   const eaNames = dataList.map(entry => entry.comment || "unbekannt");
 
   const headRow = document.createElement("tr");
   headRow.innerHTML = `<th>Parameter</th>` + eaNames.map(name => `<th>${name}</th>`).join("");
