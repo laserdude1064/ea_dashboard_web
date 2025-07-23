@@ -183,7 +183,7 @@ async function fetchData() {
   const ctx = document.getElementById("chart").getContext("2d");
 
   // Hilfsfunktionen
-  function getMinWithPadding(data, paddingFactor = 0.1) {
+  function getMinWithPadding(data, paddingFactor = 0.01) {
     const min = Math.min(...data);
     return min - Math.abs(min * paddingFactor);
   }
