@@ -90,6 +90,7 @@ tab3Btn.addEventListener("click", () => showTab(3));
       //fetchTradeHistory();
       loadMultiEAStatusTable();
       watchMultiEAStatusTable();
+      loadEAParameters();
     } else {
       loginSection.style.display = "block";
       contentSection.style.display = "none";
@@ -397,6 +398,7 @@ function renderMultiEAStatusTable(dataList) {
    eaEntries.forEach(([name, eaData]) => {
      let value = "-";
      let cellStyle = "text-align:right;";
+     const paramData = cachedParametersByComment[name] || {};
  
      if (eaData[field] !== undefined) {
        // Spezielle Behandlung für received_at
@@ -418,6 +420,8 @@ function renderMultiEAStatusTable(dataList) {
        } else {
          value = formatValue(eaData[field]);
        }
+     } else if (paramData[field] !== undefined) {
+      value = formatValue(paramData[field]);
      }
  
      row.innerHTML += `<td style="${cellStyle}">${value}</td>`;
@@ -443,6 +447,24 @@ function watchMultiEAStatusTable() {
     renderMultiEAStatusTable(dataList);
   });
 }
+
+ 
+let cachedParametersByComment = {};
+async function loadEAParameters() {
+  const colRef = collection(db, "ea_parameters");
+  const snapshot = await getDocs(colRef);
+
+  snapshot.docs.forEach(doc => {
+    const data = doc.data();
+    const comment = data.comment;
+    const timestamp = data.timestamp?.seconds || 0;
+
+    if (!cachedParametersByComment[comment] || cachedParametersByComment[comment].timestamp < timestamp) {
+      cachedParametersByComment[comment] = data;
+    }
+  });
+}
+ 
 // Optional: Formatierung je nach Typ
 function formatValue(value) {
   const keyOrder = ["time", "ticket", "volume", "open", "tp", "sl", "swap"];
