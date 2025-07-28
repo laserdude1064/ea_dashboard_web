@@ -356,7 +356,7 @@ function renderMultiEAStatusTable(dataList) {
     "AntiGridActiveBuy", "AntiGridActiveSell", "LossLotsActive",
     "BuyList", "SellList"
   ];
-  const parameterFieldOrder = [
+  let parameterFieldOrder = [
    // parametergruppe1 - basic trading parameters
    "lotsize", "LossLotsMultiplicator", "MoneyManagement", "UsedBalance",
  
@@ -458,8 +458,8 @@ function extractParameterFieldOrderAndGroups(comment) {
 
   return { fieldOrder, groupTitles };
 }
-
-const { fieldOrder: parameterFieldOrder, groupTitles } = extractParameterFieldOrderAndGroups(eaNames[0]); // <<< NEU
+let groupTitles = {};
+({ fieldOrder: parameterFieldOrder, groupTitles } = extractParameterFieldOrderAndGroups(eaNames[0])); // <<< NEU
 
 // EA-Parameter in Statusdaten integrieren
 eaEntries.forEach(([name, eaData]) => {
