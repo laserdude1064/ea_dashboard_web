@@ -374,6 +374,17 @@ function renderMultiEAStatusTable(dataList) {
 
   const eaNames = eaEntries.map(([name]) => name);
 
+  eaEntries.forEach(([name, eaData]) => {
+    const params = cachedParametersByComment[name];
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (!(key in eaData)) {
+          eaData[key] = value;  // Parameter an das Statusobjekt anhängen
+        }
+      });
+    }
+  });
+ 
   // Tabellenkopf
   const headRow = document.createElement("tr");
   headRow.innerHTML = `<th>Parameter</th>` + eaNames.map(name => `<th>${name}</th>`).join("");
