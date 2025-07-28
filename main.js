@@ -399,11 +399,47 @@ function renderMultiEAStatusTable(dataList) {
       }
     });
   });
+ 
+   // Optional: Parametergruppen zur optischen Gliederung
+  const paramGroupBreaks = [
+    "lotsize", // nach basic trading
+    "StopTradingHour", // nach time filter
+    "MaxBuyOrders", // nach order params
+    "ActivateNewsTrading", // nach news
+    "TakeProfitFirstOrder", // nach TP params
+    "ActivateStopLoss", // nach SL
+    "ActivateBB", // nach BB
+    "ActivateATRgrid", // nach ATR Grid
+    "ActivateATRtime", // nach ATR Time
+    "ActivateADX", // nach ADX
+    "ActivateRSI", // nach RSI
+    "ActivateMACD", // nach MACD
+    "volatilitysleepdays", // nach tick-vola
+  ];
+ 
   const allFields = [...fieldOrder, ...Array.from(extraFields).sort()];
-
+  let insertedParameterDivider = false;
+ 
  // Zeilen schreiben
  allFields.forEach(field => {
    const row = document.createElement("tr");
+
+    // Dicke Linie vor Parameterblock
+  if (!insertedParameterDivider && !fieldOrder.includes(field)) {
+    const dividerRow = document.createElement("tr");
+    dividerRow.innerHTML = `<td colspan="${eaNames.length + 1}" style="border-top: 4px solid black;"></td>`;
+    tableBody.appendChild(dividerRow);
+    insertedParameterDivider = true;
+  }
+  
+  // Dünne Linie zwischen Parameterguppen
+  if (insertedParameterDivider && paramGroupBreaks.includes(field)) {
+    const thinDividerRow = document.createElement("tr");
+    thinDividerRow.innerHTML = `<td colspan="${eaNames.length + 1}" style="border-top: 1px solid #999;"></td>`;
+    tableBody.appendChild(thinDividerRow);
+  }
+
+  
    row.innerHTML = `<td><strong>${field}</strong></td>`;
  
    eaEntries.forEach(([name, eaData]) => {
