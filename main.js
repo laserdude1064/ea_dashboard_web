@@ -537,9 +537,6 @@ function renderMultiEAStatusTable(dataList) {
  
    tableBody.appendChild(row);
  });
-});
-
-
 
 }
 
