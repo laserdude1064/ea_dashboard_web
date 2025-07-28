@@ -459,7 +459,11 @@ function extractParameterFieldOrderAndGroups(comment) {
   return { fieldOrder, groupTitles };
 }
 let groupTitles = {};
-({ fieldOrder: parameterFieldOrder, groupTitles } = extractParameterFieldOrderAndGroups(eaNames[0])); // <<< NEU
+const extracted = extractParameterFieldOrderAndGroups(eaNames[0]);
+if (extracted.fieldOrder.length > 0) {
+  parameterFieldOrder = extracted.fieldOrder;
+  groupTitles = extracted.groupTitles;
+}
 
 // EA-Parameter in Statusdaten integrieren
 eaEntries.forEach(([name, eaData]) => {
