@@ -356,6 +356,68 @@ function renderMultiEAStatusTable(dataList) {
     "AntiGridActiveBuy", "AntiGridActiveSell", "LossLotsActive",
     "BuyList", "SellList"
   ];
+  const parameterFieldOrder = [
+   // parametergruppe1 - basic trading parameters
+   "lotsize", "LossLotsMultiplicator", "MoneyManagement", "UsedBalance",
+ 
+   // parametergruppe2 - time filter parameters
+   "StopTradingHour", "StopTradingMinute", "StartTradingHour", "StartTradingMinute",
+   "ActivateTimeFilter", "TimeFilterStart1", "TimeFilterOffset1",
+   "TimeFilterStart2", "TimeFilterOffset2",
+   "TimeFilterStart3", "TimeFilterOffset3",
+   "TimeFilterDay1", "TimeFilterDay2",
+ 
+   // parametergruppe3 - order parameters
+   "MaxBuyOrders", "OrderSeries", "OrderSeriesPause",
+   "GridMinDist", "GridMultiplier", "waitminutes",
+   "waitminutesMultiplier", "waitminsnewgrid",
+ 
+   // parametergruppe4 - news trading
+   "ActivateNewsTrading", "usepredefinedevents",
+   "NTminutesbefore", "NTminutesafter", "uniqueEventNamesnumber",
+ 
+   // parametergruppe5 - Take Profit parameters
+   "TakeProfitFirstOrder", "TakeProfitGridOrder", "ActivateDTP",
+   "DTPFirstOrderMultiplier", "DTPGridOrderMultiplier", "DTPbars", "DTPtimeframe",
+   "ActivateTrailingTP", "TrailingTPthresholdFirstOrder", "TrailingTPdistFirstOrder",
+   "TrailingTPthreshold", "TrailingTPdist", "TrailingTPtickDiffThreshold",
+   "swapcorrection", "buyswap", "sellswap", "swapcorrectionhour",
+   "ActivateRejectionTP", "RejectionTP_timeframe", "RejectionRange", "RejectionMax",
+ 
+   // parametergruppe6 - Stop Loss parameters
+   "ActivateStopLoss", "StopLoss", "ActivateAntiGrid",
+   "AntiGridPercentage", "AntiGridLotMultiplicator", "TrailingTPdistAntiGrid",
+   "ActivateStopTime", "closeorders", "closinghours", "CloseOnOppositeSignal",
+ 
+   // parametergruppe7 - Bollinger Bands indicator parameters
+   "ActivateBB", "BB_period", "BB_shift", "BB_deviation",
+   "BB_applied_price", "BB_timeframe",
+ 
+   // parametergruppe8 - ATR Grid parameters
+   "ActivateATRgrid", "atrgrid_period", "atrgrid_timeframe", "ATRGridMultiplier",
+ 
+   // parametergruppe9 - ATR Time parameters
+   "ActivateATRtime", "atrtime_period", "atrtime_timeframe", "ATRwaitminsMultiplier",
+ 
+   // parametergruppe10 - ADX indicator parameters
+   "ActivateADX", "adx_period", "adx_timeframe", "adx_threshold",
+ 
+   // parametergruppe11 - RSI indicator parameters
+   "ActivateRSI", "rsi_period", "rsi_timeframe", "rsi_applied_price", "rsi_deviation",
+ 
+   // parametergruppe12 - MACD indicator parameters
+   "ActivateMACD", "macd_timeframe", "macd_applied_price",
+   "fast_ema_period", "slow_ema_period", "signal_period",
+   "macd_thershold", "ma_period", "ma_timeframe",
+ 
+   // parametergruppe13 - Volatility management
+   "volatilitysleepdays", "ActivateTickMax", "period_SL",
+   "tick_max", "tick_min", "tick_max_order", "tick_Diff_avg_mult", "tick_Diff_bars",
+   "ActivateDoubleBB", "BB2_period", "BB2_deviation", "BB2_applied_price", "BB2_timeframe",
+   "ActivateVolaBB", "BB3_period", "BB3_deviation", "BB3_applied_price", "BB3_timeframe", "BB3diff",
+   "ActivateATRThreshold", "atrTRH_period", "atrTRH_timeframe",
+   "ATRThreshold", "ATRThresholdMax", "ATRThresholdMin", "ATR_avg_mult", "ATRThreshold_bars"
+ ];
 
   const latestByComment = {};
   dataList.forEach(data => {
@@ -417,7 +479,7 @@ function renderMultiEAStatusTable(dataList) {
     "volatilitysleepdays", // nach tick-vola
   ];
  
-  const allFields = [...fieldOrder, ...Array.from(extraFields).sort()];
+  const allFields = [...fieldOrder, ...parameterFieldOrder];
   let insertedParameterDivider = false;
  
  // Zeilen schreiben
