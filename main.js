@@ -418,132 +418,125 @@ function renderMultiEAStatusTable(dataList) {
    "ActivateATRThreshold", "atrTRH_period", "atrTRH_timeframe",
    "ATRThreshold", "ATRThresholdMax", "ATRThresholdMin", "ATR_avg_mult", "ATRThreshold_bars"
  ];
-const latestByComment = {};
-dataList.forEach(data => {
-  const comment = data.comment || "unbekannt";
-  if (!(comment in latestByComment)) {
-    latestByComment[comment] = data;
-  }
-});
-
-const eaEntries = Object.entries(latestByComment);
-eaEntries.sort((a, b) => {
-  const aVal = a[1].TimeFilterActive ? 1 : 0;
-  const bVal = b[1].TimeFilterActive ? 1 : 0;
-  return aVal - bVal;
-});
-
-const eaNames = eaEntries.map(([name]) => name);
-
-// <<< NEU: dynamische Extraktion von Parameter-Feldreihenfolge + Gruppentitel
-function extractParameterFieldOrderAndGroups(comment) {
-  const params = cachedParametersByComment[comment];
-  if (!params) return { fieldOrder: [], groupTitles: {} };
-
-  const fieldOrder = [];
-  const groupTitles = {};
-  let currentGroup = null;
-
-  for (const [key, value] of Object.entries(params)) {
-    const groupMatch = key.match(/^parametergruppe\d+$/i);
-    if (groupMatch) {
-      currentGroup = value;
-    } else {
-      if (currentGroup) {
-        groupTitles[key] = currentGroup;
-      }
-      fieldOrder.push(key);
+ const latestByComment = {};
+  dataList.forEach(data => {
+    const comment = data.comment || "unbekannt";
+    if (!(comment in latestByComment)) {
+      latestByComment[comment] = data;
     }
-  }
+  });
 
-  return { fieldOrder, groupTitles };
-}
-let groupTitles = {};
-const extracted = extractParameterFieldOrderAndGroups(eaNames[0]);
-if (extracted.fieldOrder.length > 0) {
-  parameterFieldOrder = extracted.fieldOrder;
-  groupTitles = extracted.groupTitles;
-}
+  const eaEntries = Object.entries(latestByComment);
+  eaEntries.sort((a, b) => {
+    const aVal = a[1].TimeFilterActive ? 1 : 0;
+    const bVal = b[1].TimeFilterActive ? 1 : 0;
+    return aVal - bVal;
+  });
 
-// EA-Parameter in Statusdaten integrieren
-eaEntries.forEach(([name, eaData]) => {
-  const params = cachedParametersByComment[name];
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      if (!(key in eaData)) {
-        eaData[key] = value;  // Parameter an Statusobjekt anhängen
+  const eaNames = eaEntries.map(([name]) => name);
+
+  eaEntries.forEach(([name, eaData]) => {
+    const params = cachedParametersByComment[name];
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (!(key in eaData)) {
+          eaData[key] = value;  // Parameter an das Statusobjekt anhängen
+        }
+      });
+    }
+  });
+ 
+  // Tabellenkopf
+  const headRow = document.createElement("tr");
+  headRow.innerHTML = `<th>Parameter</th>` + eaNames.map(name => `<th>${name}</th>`).join("");
+  tableHead.appendChild(headRow);
+
+  // Zusätzliche Felder erfassen
+  const extraFields = new Set();
+  Object.values(latestByComment).forEach(data => {
+    Object.keys(data).forEach(field => {
+      if (!fieldOrder.includes(field) && field !== "timestamp" && field !== "comment") {
+        extraFields.add(field);
       }
     });
-  }
-});
+  });
+ 
+   // Optional: Parametergruppen zur optischen Gliederung
+  const paramGroupBreaks = [
+    "lotsize", // nach basic trading
+    "StopTradingHour", // nach time filter
+    "MaxBuyOrders", // nach order params
+    "ActivateNewsTrading", // nach news
+    "TakeProfitFirstOrder", // nach TP params
+    "ActivateStopLoss", // nach SL
+    "ActivateBB", // nach BB
+    "ActivateATRgrid", // nach ATR Grid
+    "ActivateATRtime", // nach ATR Time
+    "ActivateADX", // nach ADX
+    "ActivateRSI", // nach RSI
+    "ActivateMACD", // nach MACD
+    "volatilitysleepdays", // nach tick-vola
+  ];
+ 
+  const allFields = [...fieldOrder, ...parameterFieldOrder];
+  let insertedParameterDivider = false;
+ 
+ // Zeilen schreiben
+ allFields.forEach(field => {
+   const row = document.createElement("tr");
 
-// Tabellenkopf
-const headRow = document.createElement("tr");
-headRow.innerHTML = `<th>Parameter</th>` + eaNames.map(name => `<th>${name}</th>`).join("");
-tableHead.appendChild(headRow);
-
-// <<< ENTFERNT: extraFields + paramGroupBreaks
-
-const allFields = [...fieldOrder, ...parameterFieldOrder]; // <<< GEÄNDERT
-let insertedParameterDivider = false;
-let lastRenderedGroupTitle = null; // <<< NEU
-
-// Zeilen schreiben
-allFields.forEach(field => {
-  const row = document.createElement("tr");
-
-  // Dicke Linie vor Parameterblock
+    // Dicke Linie vor Parameterblock
   if (!insertedParameterDivider && !fieldOrder.includes(field)) {
     const dividerRow = document.createElement("tr");
     dividerRow.innerHTML = `<td colspan="${eaNames.length + 1}" style="border-top: 4px solid black;"></td>`;
     tableBody.appendChild(dividerRow);
     insertedParameterDivider = true;
   }
-
-  // <<< NEU: Dynamische Gruppenüberschrift einfügen
-  if (parameterFieldOrder.includes(field)) {
-    const groupTitle = groupTitles[field];
-    if (groupTitle && groupTitle !== lastRenderedGroupTitle) {
-      const titleRow = document.createElement("tr");
-      titleRow.innerHTML = `<td colspan="${eaNames.length + 1}" style="background:#eee; font-weight:bold; padding:6px;">${groupTitle}</td>`;
-      tableBody.appendChild(titleRow);
-      lastRenderedGroupTitle = groupTitle;
-    }
+  
+  // Dünne Linie zwischen Parameterguppen
+  if (insertedParameterDivider && paramGroupBreaks.includes(field)) {
+    const thinDividerRow = document.createElement("tr");
+    thinDividerRow.innerHTML = `<td colspan="${eaNames.length + 1}" style="border-top: 1px solid #999;"></td>`;
+    tableBody.appendChild(thinDividerRow);
   }
 
-  row.innerHTML = `<td><strong>${field}</strong></td>`;
-
-  eaEntries.forEach(([name, eaData]) => {
-    let value = "-";
-    let cellStyle = "text-align:right;";
-    const paramData = cachedParametersByComment[name] || {};
-
-    if (eaData[field] !== undefined) {
-      if (field === "received_at") {
-        const date = new Date(eaData[field]);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMin = diffMs / 1000 / 60;
-
-        const h = String(date.getHours()).padStart(2, '0');
-        const m = String(date.getMinutes()).padStart(2, '0');
-        const s = String(date.getSeconds()).padStart(2, '0');
-
-        value = `${h}:${m}:${s}`;
-        if (diffMin > 5) {
-          cellStyle += "background-color:#FFEB3B;";
-        }
-      } else {
-        value = formatValue(eaData[field]);
-      }
-    } else if (paramData[field] !== undefined) {
+  
+   row.innerHTML = `<td><strong>${field}</strong></td>`;
+ 
+   eaEntries.forEach(([name, eaData]) => {
+     let value = "-";
+     let cellStyle = "text-align:right;";
+     const paramData = cachedParametersByComment[name] || {};
+ 
+     if (eaData[field] !== undefined) {
+       // Spezielle Behandlung für received_at
+       if (field === "received_at") {
+         const date = new Date(eaData[field]);
+         const now = new Date();
+         const diffMs = now - date;
+         const diffMin = diffMs / 1000 / 60;
+ 
+         const h = String(date.getHours()).padStart(2, '0');
+         const m = String(date.getMinutes()).padStart(2, '0');
+         const s = String(date.getSeconds()).padStart(2, '0');
+ 
+         value = `${h}:${m}:${s}`;
+ 
+         if (diffMin > 5) {
+           cellStyle += "background-color:#FFEB3B;";
+         }
+       } else {
+         value = formatValue(eaData[field]);
+       }
+     } else if (paramData[field] !== undefined) {
       value = formatValue(paramData[field]);
-    }
-
-    row.innerHTML += `<td style="${cellStyle}">${value}</td>`;
-  });
-
-  tableBody.appendChild(row);
+     }
+ 
+     row.innerHTML += `<td style="${cellStyle}">${value}</td>`;
+   });
+ 
+   tableBody.appendChild(row);
+ });
 });
 
 
