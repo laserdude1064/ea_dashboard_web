@@ -467,7 +467,13 @@ function renderMultiEAStatusTable(dataList) {
  
  // Zeilen schreiben
  allFields.forEach(field => {
-  
+      // Dicke Linie vor Parameterblock
+  if (!insertedParameterDivider && !fieldOrder.includes(field)) {
+    const dividerRow = document.createElement("tr");
+    dividerRow.innerHTML = `<td colspan="${eaNames.length + 1}" style="border-top: 4px solid black;"></td>`;
+    tableBody.appendChild(dividerRow);
+    insertedParameterDivider = true;
+  }
   if (field.startsWith("__")) {
     const titleRow = document.createElement("tr");
     titleRow.innerHTML = `<td colspan="${eaNames.length + 1}" style="background:#eee; font-weight:bold;">${field.slice(2)}</td>`;
@@ -475,14 +481,6 @@ function renderMultiEAStatusTable(dataList) {
     return;
   }
    const row = document.createElement("tr");
-
-    // Dicke Linie vor Parameterblock
-  if (!insertedParameterDivider && !fieldOrder.includes(field)) {
-    const dividerRow = document.createElement("tr");
-    dividerRow.innerHTML = `<td colspan="${eaNames.length + 1}" style="border-top: 4px solid black;"></td>`;
-    tableBody.appendChild(dividerRow);
-    insertedParameterDivider = true;
-  }
     
    row.innerHTML = `<td><strong>${field}</strong></td>`;
  
