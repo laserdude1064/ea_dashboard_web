@@ -759,7 +759,6 @@ function formatValue(value) {
 }
  
   let tradeList = [];
-  let tradeChart = null;
   let useTimeAxis = false;
  
  function renderChartForRange(startDate, endDate) {
