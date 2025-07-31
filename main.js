@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const accountSelect = document.getElementById("account-select");
   let currentAccountId = null;
   let selectedAccountId = null;
+  let accountListenerSet = false;
  
   const statsMonitoringBody = document.querySelector("#stats-monitoring tbody");
   const statsTradesBody = document.querySelector("#stats-trades tbody");
@@ -83,35 +84,35 @@ tab3Btn.addEventListener("click", () => showTab(3));
     });
   }
 
-  // Auth State beobachten
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      loginSection.style.display = "none";
-      contentSection.style.display = "block";
-      showTab(3);
+  // Auth State beobachten 
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    loginSection.style.display = "none";
+    contentSection.style.display = "block";
+    showTab(3);
 
-      await loadAvailableAccounts();  // 🔄 Account-Liste laden
-      currentAccountId = accountSelect.value; // erste Auswahl setzen
+    await loadAvailableAccounts(); // setzt accountSelect Optionen
+    currentAccountId = accountSelect.value;
 
-      // 🔁 Auswahlwechsel behandeln
+    if (!accountListenerSet) {
       accountSelect.addEventListener("change", () => {
         currentAccountId = accountSelect.value;
         fetchData();
         loadMultiEAStatusTable();
         loadEAParameters();
       });
-     
-      // 📊 Initialdaten laden
-     fetchData();
-      //fetchTradeHistory();
-      loadMultiEAStatusTable();
-      watchMultiEAStatusTable();
-      loadEAParameters();
-    } else {
-      loginSection.style.display = "block";
-      contentSection.style.display = "none";
+      accountListenerSet = true;
     }
-  });
+
+    fetchData();
+    loadMultiEAStatusTable();
+    watchMultiEAStatusTable();
+    loadEAParameters();
+  } else {
+    loginSection.style.display = "block";
+    contentSection.style.display = "none";
+  }
+});
 
   // Login Funktion für HTML-Zugriff (wird derzeit nicht genutzt)
   window.login = async function () {
@@ -191,10 +192,10 @@ tab3Btn.addEventListener("click", () => showTab(3));
 
   // ===================================================================================== Trade-Daten laden ============
 async function fetchData() {
-  console.log("🔍 Lade Daten aus 'ea_monitoring_history' für Account:", selectedAccountId);
+  console.log("🔍 Lade Daten aus 'ea_monitoring_history' für Account:", currentAccountId);
   const dataList = [];
  
-  if (!selectedAccountId) {
+  if (!currentAccountId) {
     console.warn("⚠️ Kein Account ausgewählt – Abbruch.");
     return;
   }
@@ -206,7 +207,7 @@ async function fetchData() {
     const entries = d?.entries || [];
     entries.forEach(item => {
       if (
-        item.account_id === selectedAccountId &&
+        item.account_id === currentAccountId &&
         item.timestamp &&
         typeof item.equity === "number" &&
         typeof item.balance === "number" &&
@@ -223,7 +224,7 @@ async function fetchData() {
   snapshot.forEach(doc => {
     const d = doc.data();
     if (
-      d.account_id === selectedAccountId &&
+      d.account_id === currentAccountId &&
       d.timestamp &&
       typeof d.equity === "number" &&
       typeof d.balance === "number" &&
@@ -357,12 +358,12 @@ async function fetchData() {
 }
  //========================================================================= HISTORISCHE TRADE DATEN LADEN
 async function fetchTradeHistory() {
-  if (!selectedAccountId) {
+  if (!currentAccountId) {
     console.warn("⚠️ Kein Account ausgewählt – Trade-History wird nicht geladen.");
     return;
   }
 
-  console.log("📦 Lade Daten aus 'ea_trades' für Account:", selectedAccountId);
+  console.log("📦 Lade Daten aus 'ea_trades' für Account:", currentAccountId);
   const snapshot = await getDocs(collection(db, "ea_trades"));
   tradeList = [];
 
@@ -372,7 +373,7 @@ async function fetchTradeHistory() {
   snapshot.forEach(doc => {
     const d = doc.data();
     if (
-      d.account_id === selectedAccountId &&
+      d.account_id === currentAccountId &&
       d.time &&
       typeof d.profit === "number"
     ) {
@@ -492,7 +493,7 @@ function renderMultiEAStatusTable(dataList) {
   "ActivateATRThreshold", "atrTRH_period", "atrTRH_timeframe",
   "ATRThreshold", "ATRThresholdMax", "ATRThresholdMin", "ATR_avg_mult", "ATRThreshold_bars"
 ];
-  if (!selectedAccountId) {
+  if (!currentAccountId) {
     console.warn("⚠️ Kein Account ausgewählt – Tabelle wird nicht angezeigt.");
     return;
   }
@@ -500,7 +501,7 @@ function renderMultiEAStatusTable(dataList) {
  const latestByComment = {};
  
   dataList.forEach(data => {
-    if (data.account_id !== selectedAccountId) return;
+    if (data.account_id !== currentAccountId) return;
     const comment = data.comment || "unbekannt";    
     if (!(comment in latestByComment)) {
       latestByComment[comment] = data;
@@ -622,7 +623,7 @@ async function loadMultiEAStatusTable() {
   const snapshot = await getDocs(colRef);
   const dataList = snapshot.docs
     .map(doc => doc.data())
-    .filter(d => d.account_id === selectedAccountId); // 🔧 Nur Daten des aktiven Accounts
+    .filter(d => d.account_id === currentAccountId); // 🔧 Nur Daten des aktiven Accounts
 
   renderMultiEAStatusTable(dataList);
 }
@@ -633,7 +634,7 @@ function watchMultiEAStatusTable() {
   onSnapshot(colRef, snapshot => {
     const dataList = snapshot.docs
       .map(doc => doc.data())
-      .filter(d => d.account_id === selectedAccountId); // 🔧 Nur Daten des aktiven Accounts
+      .filter(d => d.account_id === currentAccountId); // 🔧 Nur Daten des aktiven Accounts
 
     renderMultiEAStatusTable(dataList);
   });
