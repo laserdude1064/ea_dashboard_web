@@ -26,7 +26,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const logoutButton = document.getElementById("logout-button");
   const accountSelect = document.getElementById("account-select");
   let currentAccountId = null;
-
+  let selectedAccountId = null;
+ 
   const statsMonitoringBody = document.querySelector("#stats-monitoring tbody");
   const statsTradesBody = document.querySelector("#stats-trades tbody");
 
