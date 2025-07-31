@@ -190,9 +190,14 @@ tab3Btn.addEventListener("click", () => showTab(3));
 
   // ===================================================================================== Trade-Daten laden ============
 async function fetchData() {
-console.log("🔍 Lade Daten aus 'ea_monitoring_history'...");
+  console.log("🔍 Lade Daten aus 'ea_monitoring_history' für Account:", selectedAccountId");
   const dataList = [];
-
+ 
+  if (!selectedAccountId) {
+    console.warn("⚠️ Kein Account ausgewählt – Abbruch.");
+    return;
+  }
+ 
   // 1. Daten aus `ea_monitoring_history` holen (alle Dokumente)
   const historySnapshot = await getDocs(collection(db, "ea_monitoring_history"));
   historySnapshot.forEach(doc => {
@@ -200,6 +205,7 @@ console.log("🔍 Lade Daten aus 'ea_monitoring_history'...");
     const entries = d?.entries || [];
     entries.forEach(item => {
       if (
+        item.account_id === selectedAccountId &&
         item.timestamp &&
         typeof item.equity === "number" &&
         typeof item.balance === "number" &&
@@ -216,6 +222,7 @@ console.log("🔍 Lade Daten aus 'ea_monitoring_history'...");
   snapshot.forEach(doc => {
     const d = doc.data();
     if (
+      d.account_id === selectedAccountId &&
       d.timestamp &&
       typeof d.equity === "number" &&
       typeof d.balance === "number" &&
@@ -233,8 +240,7 @@ console.log("🔍 Lade Daten aus 'ea_monitoring_history'...");
   const timestamps = dataList.map(d => d.timestamp);
   const indexLabels = equity.map((_, i) => i);
 
-  const useTimeAxis =
-    document.getElementById("toggle-time-axis-live")?.checked ?? false;
+  const useTimeAxis = document.getElementById("toggle-time-axis-live")?.checked ?? false;
 
   const labels = useTimeAxis ? timestamps : indexLabels;
   const xScaleType = useTimeAxis ? "time" : "linear";
@@ -350,7 +356,12 @@ console.log("🔍 Lade Daten aus 'ea_monitoring_history'...");
 }
  //========================================================================= HISTORISCHE TRADE DATEN LADEN
 async function fetchTradeHistory() {
-  console.log("📦 Lade Daten aus 'ea_trades'...");
+  if (!selectedAccountId) {
+    console.warn("⚠️ Kein Account ausgewählt – Trade-History wird nicht geladen.");
+    return;
+  }
+
+  console.log("📦 Lade Daten aus 'ea_trades' für Account:", selectedAccountId);
   const snapshot = await getDocs(collection(db, "ea_trades"));
   tradeList = [];
 
@@ -359,8 +370,11 @@ async function fetchTradeHistory() {
 
   snapshot.forEach(doc => {
     const d = doc.data();
-    if (d.time && typeof d.profit === "number") {
-      // Wenn gültiger Kommentar vorhanden → merken
+    if (
+      d.account_id === selectedAccountId &&
+      d.time &&
+      typeof d.profit === "number"
+    ) {
       if (eaCommentPattern.test(d.comment)) {
         positionIdToComment.set(d.position_id, d.comment);
       }
@@ -477,10 +491,16 @@ function renderMultiEAStatusTable(dataList) {
   "ActivateATRThreshold", "atrTRH_period", "atrTRH_timeframe",
   "ATRThreshold", "ATRThresholdMax", "ATRThresholdMin", "ATR_avg_mult", "ATRThreshold_bars"
 ];
-
+  if (!selectedAccountId) {
+    console.warn("⚠️ Kein Account ausgewählt – Tabelle wird nicht angezeigt.");
+    return;
+  }
+ 
  const latestByComment = {};
+ 
   dataList.forEach(data => {
-    const comment = data.comment || "unbekannt";
+    if (data.account_id !== selectedAccountId) return;
+    const comment = data.comment || "unbekannt";    
     if (!(comment in latestByComment)) {
       latestByComment[comment] = data;
     }
@@ -599,7 +619,10 @@ const eaEntries = Object.entries(latestByComment);
 async function loadMultiEAStatusTable() {
   const colRef = collection(db, "ea_status");
   const snapshot = await getDocs(colRef);
-  const dataList = snapshot.docs.map(doc => doc.data());
+  const dataList = snapshot.docs
+    .map(doc => doc.data())
+    .filter(d => d.account_id === selectedAccountId); // 🔧 Nur Daten des aktiven Accounts
+
   renderMultiEAStatusTable(dataList);
 }
 
@@ -607,7 +630,10 @@ function watchMultiEAStatusTable() {
   const colRef = collection(db, "ea_status");
 
   onSnapshot(colRef, snapshot => {
-    const dataList = snapshot.docs.map(doc => doc.data());
+    const dataList = snapshot.docs
+      .map(doc => doc.data())
+      .filter(d => d.account_id === selectedAccountId); // 🔧 Nur Daten des aktiven Accounts
+
     renderMultiEAStatusTable(dataList);
   });
 }
