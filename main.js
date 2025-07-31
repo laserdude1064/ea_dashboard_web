@@ -150,10 +150,29 @@ tab3Btn.addEventListener("click", () => showTab(3));
 
   // ===================================================================================== Trade-Daten laden ============
 async function fetchData() {
-  console.log("🔍 Lade Daten aus 'ea_monitoring'...");
-  const snapshot = await getDocs(collection(db, "ea_monitoring"));
+console.log("🔍 Lade Daten aus 'ea_monitoring_history'...");
   const dataList = [];
 
+  // 1. Daten aus `ea_monitoring_history` holen (alle Dokumente)
+  const historySnapshot = await getDocs(collection(db, "ea_monitoring_history"));
+  historySnapshot.forEach(doc => {
+    const d = doc.data();
+    const entries = d?.entries || [];
+    entries.forEach(item => {
+      if (
+        item.timestamp &&
+        typeof item.equity === "number" &&
+        typeof item.balance === "number" &&
+        typeof item.drawdown === "number"
+      ) {
+        dataList.push(item);
+      }
+    });
+  });
+
+  // 2. Aktuelle Daten aus `ea_monitoring` hinzufügen
+  console.log("🔍 Ergänze aktuelle Daten aus 'ea_monitoring'...");
+  const snapshot = await getDocs(collection(db, "ea_monitoring"));
   snapshot.forEach(doc => {
     const d = doc.data();
     if (
@@ -289,7 +308,7 @@ async function fetchData() {
 
   updateMonitoringStats(equity, balance, drawdown);
 }
- 
+ //========================================================================= HISTORISCHE TRADE DATEN LADEN
 async function fetchTradeHistory() {
   console.log("📦 Lade Daten aus 'ea_trades'...");
   const snapshot = await getDocs(collection(db, "ea_trades"));
@@ -665,9 +684,6 @@ function formatValue(value) {
 
   return String(value);
 }
-
-
-
  
   let tradeList = [];
   let tradeChart = null;
