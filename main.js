@@ -86,7 +86,7 @@ tab3Btn.addEventListener("click", () => showTab(3));
       loginSection.style.display = "none";
       contentSection.style.display = "block";
       showTab(3);
-      //fetchData();
+      fetchData();
       //fetchTradeHistory();
       loadMultiEAStatusTable();
       watchMultiEAStatusTable();
