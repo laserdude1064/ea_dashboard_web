@@ -24,6 +24,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginSection = document.getElementById("login-section");
   const contentSection = document.getElementById("content-section");
   const logoutButton = document.getElementById("logout-button");
+  const accountSelect = document.getElementById("account-select");
+  let currentAccountId = null;
 
   const statsMonitoringBody = document.querySelector("#stats-monitoring tbody");
   const statsTradesBody = document.querySelector("#stats-trades tbody");
@@ -86,7 +88,20 @@ tab3Btn.addEventListener("click", () => showTab(3));
       loginSection.style.display = "none";
       contentSection.style.display = "block";
       showTab(3);
-      fetchData();
+
+      await loadAvailableAccounts();  // 🔄 Account-Liste laden
+      currentAccountId = accountSelect.value; // erste Auswahl setzen
+
+      // 🔁 Auswahlwechsel behandeln
+      accountSelect.addEventListener("change", () => {
+        currentAccountId = accountSelect.value;
+        fetchData();
+        loadMultiEAStatusTable();
+        loadEAParameters();
+      });
+     
+      // 📊 Initialdaten laden
+     fetchData();
       //fetchTradeHistory();
       loadMultiEAStatusTable();
       watchMultiEAStatusTable();
@@ -108,6 +123,31 @@ tab3Btn.addEventListener("click", () => showTab(3));
       document.getElementById("login-error").textContent = "❌ Login fehlgeschlagen: " + error.message;
     }
   };
+  async function loadAvailableAccounts() {
+    const snapshot = await getDocs(collection(db, "ea_monitoring"));
+    const accounts = new Set();
+  
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      if (d.account_id) {
+        accounts.add(d.account_id);
+      }
+    });
+  
+    accountSelect.innerHTML = ""; // Reset
+    Array.from(accounts).sort().forEach(acc => {
+      const option = document.createElement("option");
+      option.value = acc;
+      option.textContent = acc;
+      accountSelect.appendChild(option);
+    });
+  
+    // Setze ersten Account als aktiv
+    if (accounts.size > 0) {
+      currentAccountId = accountSelect.value;
+    }
+  }
+
   // ============ Monitoring-Daten laden ============ 
 
   function updateMonitoringStats(equity, balance, drawdown) {
