@@ -83,7 +83,7 @@ tab3Btn.addEventListener("click", () => showTab(3));
   }
 
   // Auth State beobachten
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (user) {
       loginSection.style.display = "none";
       contentSection.style.display = "block";
