@@ -190,7 +190,7 @@ tab3Btn.addEventListener("click", () => showTab(3));
 
   // ===================================================================================== Trade-Daten laden ============
 async function fetchData() {
-  console.log("🔍 Lade Daten aus 'ea_monitoring_history' für Account:", selectedAccountId");
+  console.log("🔍 Lade Daten aus 'ea_monitoring_history' für Account:", selectedAccountId);
   const dataList = [];
  
   if (!selectedAccountId) {
