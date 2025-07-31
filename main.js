@@ -427,14 +427,30 @@ function renderMultiEAStatusTable(dataList) {
     }
   });
 
-  const eaEntries = Object.entries(latestByComment);
-  eaEntries.sort((a, b) => {
-    const aVal = a[1].TimeFilterActive ? 1 : 0;
-    const bVal = b[1].TimeFilterActive ? 1 : 0;
-    return aVal - bVal;
-  });
+const eaEntries = Object.entries(latestByComment);
+ eaEntries.sort((a, b) => {
+   const commentA = a[0];
+   const commentB = b[0];
+ 
+   const endsWith = (str, suffix) => str.endsWith(suffix) ? 1 : 0;
+ 
+   // MR-EAs sollen zuerst, dann TF, dann der Rest
+   const aMR = endsWith(commentA, "MR");
+   const bMR = endsWith(commentB, "MR");
+   if (aMR !== bMR) return bMR - aMR;
+ 
+   const aTF = endsWith(commentA, "TF");
+   const bTF = endsWith(commentB, "TF");
+   if (aTF !== bTF) return bTF - aTF;
+ 
+   // Wenn beides gleich, dann nach TimeFilterActive
+   const aVal = a[1].TimeFilterActive ? 1 : 0;
+   const bVal = b[1].TimeFilterActive ? 1 : 0;
+   return aVal - bVal;
+ });
 
-  const eaNames = eaEntries.map(([name]) => name);
+
+ const eaNames = eaEntries.map(([name]) => name);
 
   eaEntries.forEach(([name, eaData]) => {
     const params = cachedParametersByComment[name];
