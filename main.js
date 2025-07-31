@@ -4,6 +4,14 @@ import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from
  
 console.log("📡 main.js geladen");
 
+const accountNames = {
+  "40493": "Demo1 - 40493",
+  "40496": "Demo2 - 40496",
+  "707838": "Eric live - 707838",
+  "707947": "Marcel live - 707947"
+  // weitere Einträge…
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   // Firebase Setup
   const firebaseConfig = {
@@ -127,30 +135,32 @@ onAuthStateChanged(auth, async (user) => {
       document.getElementById("login-error").textContent = "❌ Login fehlgeschlagen: " + error.message;
     }
   };
+
   async function loadAvailableAccounts() {
-    const snapshot = await getDocs(collection(db, "ea_monitoring"));
-    const accounts = new Set();
-  
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      if (d.account_id) {
-        accounts.add(d.account_id);
-      }
-    });
-  
-    accountSelect.innerHTML = ""; // Reset
-    Array.from(accounts).sort().forEach(acc => {
-      const option = document.createElement("option");
-      option.value = acc;
-      option.textContent = acc;
-      accountSelect.appendChild(option);
-    });
-  
-    // Setze ersten Account als aktiv
-    if (accounts.size > 0) {
-      currentAccountId = accountSelect.value;
-    }
-  }
+   const snapshot = await getDocs(collection(db, "ea_monitoring"));
+   const accounts = new Set();
+ 
+   snapshot.forEach(doc => {
+     const d = doc.data();
+     if (d.account_id) {
+       accounts.add(d.account_id);
+     }
+   });
+ 
+   accountSelect.innerHTML = ""; // Reset
+   Array.from(accounts).sort().forEach(acc => {
+     const option = document.createElement("option");
+     option.value = acc;
+     option.textContent = accountNames[acc] || acc; // Mapping oder ID anzeigen
+     accountSelect.appendChild(option);
+   });
+ 
+   // Setze ersten Account als aktiv
+   if (accounts.size > 0) {
+     currentAccountId = accountSelect.value;
+   }
+ }
+ 
 
   // ============ Monitoring-Daten laden ============ 
 
