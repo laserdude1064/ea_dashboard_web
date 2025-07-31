@@ -28,6 +28,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentAccountId = null;
   let selectedAccountId = null;
   let accountListenerSet = false;
+  let portfolioChart = null;
+  let tradeChart = null;
  
   const statsMonitoringBody = document.querySelector("#stats-monitoring tbody");
   const statsTradesBody = document.querySelector("#stats-trades tbody");
@@ -262,8 +264,11 @@ async function fetchData() {
   }
 
   // Chart
-
- new Chart(ctx, {
+ 
+ if (portfolioChart) {
+  portfolioChart.destroy();
+ }
+ portfolioChart = new Chart(ctx, {
     type: "bar",
     data: {
       labels: labels,
@@ -756,6 +761,7 @@ function formatValue(value) {
   let tradeList = [];
   let tradeChart = null;
   let useTimeAxis = false;
+ 
  function renderChartForRange(startDate, endDate) {
   const eaLegendContainer = document.getElementById("ea-legend");
   if (!eaLegendContainer) {
@@ -851,6 +857,7 @@ function formatValue(value) {
   const ctx = document.getElementById("chart-trades").getContext("2d");
   if (tradeChart) tradeChart.destroy();
 
+  if (tradeChart) {tradeChart.destroy();}
   tradeChart = new Chart(ctx, {
     type: "line",
     data: { datasets },
