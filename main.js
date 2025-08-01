@@ -751,13 +751,8 @@ function formatValue(value) {
 
       // Komplettes Table innerhalb von <details>
       return `
-        <details style="margin-bottom: 4px;">
-          <summary style="cursor: pointer; font-size: 0.85em; color: #007acc;">Details anzeigen</summary>
-          <table style="border-collapse: collapse; font-size: 0.8em; margin-top: 4px;">
-            <thead><tr>${headers}</tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </details>`;
+      <button onclick='openModal(\`${generateTableHTML(value)}\`)' style="font-size:0.8em; cursor:pointer;">🗂️ Details anzeigen</button>
+      `;
     }
 
     // Arrays von Arrays oder einfachen Werten
@@ -784,7 +779,38 @@ function formatValue(value) {
 
   return String(value);
 }
+  function generateTableHTML(value) {
+   const keyOrder = ["time", "ticket", "volume", "open", "tp", "sl", "swap"];
  
+   value.sort((a, b) => (a.time || 0) - (b.time || 0));
+   const headers = keyOrder.map(key => `<th style="padding: 2px 6px; text-align: left;">${key}</th>`).join("");
+ 
+   const rows = value.map(obj => {
+     const cells = keyOrder.map(key => {
+       let val = obj[key];
+       if (key === "time" && typeof val === "number") val = new Date(val * 1000).toLocaleString();
+       if (typeof val === "boolean") val = val ? "✅" : "❌";
+       return `<td style="padding: 2px 6px;">${val !== undefined ? val : ""}</td>`;
+     }).join("");
+     return `<tr>${cells}</tr>`;
+   }).join("");
+ 
+   return `
+     <table style="border-collapse: collapse; font-size: 0.85em; margin-top: 4px;">
+       <thead><tr>${headers}</tr></thead>
+       <tbody>${rows}</tbody>
+     </table>`;
+ }
+   function openModal(contentHtml) {
+    const overlay = document.getElementById("modal-overlay");
+    const body = document.getElementById("modal-body");
+    body.innerHTML = contentHtml;
+    overlay.style.display = "block";
+  }
+  
+  function closeModal() {
+    document.getElementById("modal-overlay").style.display = "none";
+  }
   let tradeList = [];
   let useTimeAxis = false;
  
