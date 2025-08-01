@@ -2,7 +2,6 @@
 <html lang="de">
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <meta charset="UTF-8" />
     <title>EA Dashboard</title>
 
@@ -19,9 +18,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/de.js"></script>
 
     <link rel="stylesheet" href="https://laserdude1064.github.io/ea_dashboard_web/mobile_style.css">
-    
   </head>
-
   <body>
     <!-- 🔐 LOGIN SECTION -->
     <div id="login-section">
@@ -30,40 +27,36 @@
         <input name="email" type="email" placeholder="E-Mail" required /><br />
         <input name="password" type="password" placeholder="Passwort" required /><br />
         <button type="submit">Login</button>
-        <p id="login-error" style="color: red;"></p>
+        <p id="login-error" class="error-msg"></p>
       </form>
     </div>
 
     <!-- 📊 CONTENT SECTION -->
-    <div id="content-section" style="display: none;">
-      
-      <!-- 🔄 ACCOUNT SELECTOR (global sichtbar) -->
-      <div id="account-selector" style="margin-bottom: 10px;">
+    <div id="content-section" class="hidden">
+      <div id="account-selector" class="mb-10">
         <label for="account-select"><strong>Account wählen:</strong></label>
-        <select id="account-select">
-          <!-- Optionen werden dynamisch per JavaScript eingefügt -->
-        </select>
+        <select id="account-select"></select>
       </div>
-      
+
       <div id="tabs">
         <button id="tab1-btn" class="active" type="button">Live-Daten</button>
         <button id="tab2-btn" type="button">Historische Trades</button>
         <button id="tab3-btn" type="button">EA-Parameter</button>
-        <button id="logout-button" style="float: right;">Logout</button>
+        <button id="logout-button" class="logout-btn">Logout</button>
       </div>
 
       <div id="tab1" class="tab-content active">
         <h1>Aktuelle Portfolio Übersicht</h1>
         <canvas id="chart" width="800" height="400"></canvas>
         <label>
-        <input type="checkbox" id="toggle-time-axis-live" />
-        Zeitachse aktivieren
+          <input type="checkbox" id="toggle-time-axis-live" />
+          Zeitachse aktivieren
         </label>
-        <table id="stats-monitoring" border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse;">
+        <table id="stats-monitoring" class="data-table" border="1">
           <thead>
             <tr>
-              <th style="text-align: left;">Kennzahl</th>
-              <th style="text-align: right;">Wert</th>
+              <th class="align-left">Kennzahl</th>
+              <th class="align-right">Wert</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -75,67 +68,62 @@
         <div class="range-controls">
           <input id="dateRange" type="text" placeholder="Zeitraum auswählen…" />
         </div>
-        <div id="ea-legend" style="margin-top: 1em;"></div>
+        <div id="ea-legend" class="mt-1"></div>
         <canvas id="chart-trades" width="800" height="400"></canvas>
         <label>
-        <input type="checkbox" id="toggle-time-axis" />
-        Zeitachse aktivieren
+          <input type="checkbox" id="toggle-time-axis" />
+          Zeitachse aktivieren
         </label>
-
-        <table id="stats-trades" border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse;">
+        <table id="stats-trades" class="data-table" border="1">
           <thead>
             <tr>
-              <th style="text-align: left;">Kennzahl</th>
-              <th style="text-align: right;">Wert</th>
+              <th class="align-left">Kennzahl</th>
+              <th class="align-right">Wert</th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
         <h3>Monatliche Gewinne</h3>
-        <table id="monthly-profit-table" border="1" style="margin-top: 20px; width: 100%; border-collapse: collapse;">
-        <thead>
-          <tr>
-            <th>Jahr</th>
-            <th>Jan</th>
-            <th>Feb</th>
-            <th>Mär</th>
-            <th>Apr</th>
-            <th>Mai</th>
-            <th>Jun</th>
-            <th>Jul</th>
-            <th>Aug</th>
-            <th>Sep</th>
-            <th>Okt</th>
-            <th>Nov</th>
-            <th>Dez</th>
-          </tr>
-        </thead>
-        <tbody id="monthly-profit-body">
-          <!-- Wird dynamisch gefüllt -->
-        </tbody>
-      </table>
-      </div>
-      <div id="tab3" class="tab-content">
-        <h1>Interne Parameter jedes aktiven EAs</h1>
-        <table id="payload-table" border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse;">
-          <thead id="payload-table-head">
-            <tr id="payload-header-row">
-              <!-- Spaltenüberschriften werden dynamisch gesetzt -->
+        <table id="monthly-profit-table" class="data-table mt-20" border="1">
+          <thead>
+            <tr>
+              <th>Jahr</th>
+              <th>Jan</th>
+              <th>Feb</th>
+              <th>Mär</th>
+              <th>Apr</th>
+              <th>Mai</th>
+              <th>Jun</th>
+              <th>Jul</th>
+              <th>Aug</th>
+              <th>Sep</th>
+              <th>Okt</th>
+              <th>Nov</th>
+              <th>Dez</th>
             </tr>
           </thead>
-          <tbody id="payload-table-body">
-            <!-- Datenzeilen werden dynamisch befüllt -->
-          </tbody>
+          <tbody id="monthly-profit-body"></tbody>
+        </table>
+      </div>
+
+      <div id="tab3" class="tab-content">
+        <h1>Interne Parameter jedes aktiven EAs</h1>
+        <table id="payload-table" class="data-table mt-10" border="1">
+          <thead id="payload-table-head">
+            <tr id="payload-header-row"></tr>
+          </thead>
+          <tbody id="payload-table-body"></tbody>
         </table>
       </div>
     </div>
-    <div id="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:1000;">
-      <div id="modal-content" style="background:white; margin:5% auto; padding:20px; width:90%; max-width:800px; max-height:90vh; overflow:auto; border-radius:8px; position:relative;">
-        <button onclick="closeModal()" style="position:absolute; top:10px; right:10px;">✖</button>
+
+    <div id="modal-overlay" class="modal-overlay">
+      <div id="modal-content" class="modal-content">
+        <button onclick="closeModal()" class="modal-close-button">✖</button>
         <div id="modal-body"></div>
       </div>
     </div>
-    <!-- JavaScript -->
+
     <script type="module" src="main.js"></script>
   </body>
 </html>
