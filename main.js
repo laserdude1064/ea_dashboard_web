@@ -811,6 +811,11 @@ function formatValue(value) {
   function closeModal() {
     document.getElementById("modal-overlay").style.display = "none";
   }
+   // Wichtig: Funktionen global machen
+  window.openModal = openModal;
+  window.closeModal = closeModal;
+
+ 
   let tradeList = [];
   let useTimeAxis = false;
  
