@@ -392,17 +392,21 @@ async function fetchTradeHistory() {
 
   snapshot.forEach(doc => {
     const d = doc.data();
-    if (
-      d.account_id === currentAccountId &&
-      d.time &&
-      typeof d.profit === "number"
-    ) {
-      if (eaCommentPattern.test(d.comment)) {
-        positionIdToComment.set(d.position_id, d.comment);
-      }
-      tradeList.push(d);
-    }
-  });
+
+     // Prüfe Account-ID und ob "deals" Array vorhanden ist
+     if (d.account_id === currentAccountId && Array.isArray(d.deals)) {
+       // Alle Trades des Tages durchgehen
+       d.deals.forEach(trade => {
+         if (trade.time && typeof trade.profit === "number") {
+           if (eaCommentPattern.test(trade.comment)) {
+             positionIdToComment.set(trade.position_id, trade.comment);
+           }
+           tradeList.push(trade);
+         }
+       });
+     }
+   });
+
 
   // Nachträglich Kommentare ergänzen, falls nötig
   tradeList.forEach(t => {
