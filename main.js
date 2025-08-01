@@ -341,6 +341,9 @@ async function fetchData() {
             ? {
                 tooltipFormat: "dd.MM.yyyy HH:mm",
                 displayFormats: {
+                 millisecond: "HH:mm",
+                 second: "HH:mm",
+                 minute: "HH:mm",
                   hour: "HH:mm",
                   day: "dd.MM"
                 }
