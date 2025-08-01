@@ -108,6 +108,7 @@ onAuthStateChanged(auth, async (user) => {
       accountSelect.addEventListener("change", () => {
         currentAccountId = accountSelect.value;
         fetchData();
+        fetchTradeHistory();
         loadMultiEAStatusTable();
         loadEAParameters();
       });
@@ -115,6 +116,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     fetchData();
+    fetchTradeHistory();
     loadMultiEAStatusTable();
     watchMultiEAStatusTable();
     loadEAParameters();
