@@ -141,10 +141,8 @@ onAuthStateChanged(auth, async (user) => {
    const accounts = new Set();
  
    snapshot.forEach(doc => {
-     const d = doc.data();
-     if (d.account_id) {
-       accounts.add(d.account_id);
-     }
+    const accountId = doc.id;            // Doc-ID ist Account-ID
+    accounts.add(accountId);
    });
  
    accountSelect.innerHTML = ""; // Reset
@@ -232,19 +230,26 @@ async function fetchData() {
 
   // 2. Aktuelle Daten aus `ea_monitoring` hinzufügen
   console.log("🔍 Ergänze aktuelle Daten aus 'ea_monitoring'...");
-  const snapshot = await getDocs(collection(db, "ea_monitoring"));
-  snapshot.forEach(doc => {
-    const d = doc.data();
-    if (
-      d.account_id === currentAccountId &&
-      d.timestamp &&
-      typeof d.equity === "number" &&
-      typeof d.balance === "number" &&
-      typeof d.drawdown === "number"
-    ) {
-      dataList.push(d);
-    }
-  });
+  const docRef = doc(db, "ea_monitoring", currentAccountId);
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    const d = docSnap.data();
+    const entries = d?.entries || [];
+
+    entries.forEach(item => {
+      if (
+        item.timestamp &&
+        typeof item.equity === "number" &&
+        typeof item.balance === "number" &&
+        typeof item.drawdown === "number"
+      ) {
+        dataList.push(item);
+      }
+    });
+  } else {
+    console.warn(`Kein Dokument für Account ${currentAccountId} in ea_monitoring gefunden.`);
+  }
 
   dataList.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 
