@@ -378,6 +378,9 @@ async function fetchData() {
 
   updateMonitoringStats(equity, balance, drawdown);
 }
+document.getElementById("toggle-time-axis-live").addEventListener("change", async () => {
+  await fetchData();  // ruft den Chart mit neuer Achsen-Option neu auf
+});
  //========================================================================= HISTORISCHE TRADE DATEN LADEN
 async function fetchTradeHistory() {
   if (!currentAccountId) {
