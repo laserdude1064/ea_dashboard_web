@@ -1086,22 +1086,26 @@ document.getElementById("toggle-time-axis").addEventListener("change", (e) => {
     });
 
 
-    });
-   //================================================================================================================================================= LOGS LADEN
+    });   
   }
-  async function loadEAMessages(selectedEA = "") {
+ //================================================================================================================================================= LOGS LADEN
+ async function loadEAMessages(selectedEA = "") {
   const colRef = collection(db, "ea_messages");
   const snapshot = await getDocs(colRef);
 
   const logList = document.getElementById("log-list");
-  logList.innerHTML = ""; // Liste zurücksetzen
+  const filterSelect = document.getElementById("log-filter");
+  logList.innerHTML = "";
+
+  const allComments = new Set();
 
   snapshot.forEach(doc => {
     const data = doc.data();
     const comment = data.comment || "Unbekannt";
     const messages = data.messages || [];
 
-    // Wenn ein spezifischer EA ausgewählt ist, filtern
+    allComments.add(comment);
+
     if (selectedEA && selectedEA !== comment) return;
 
     messages.forEach(msg => {
@@ -1110,10 +1114,21 @@ document.getElementById("toggle-time-axis").addEventListener("change", (e) => {
       logList.appendChild(li);
     });
   });
+
+  // Dropdown neu aufbauen, aber nur wenn es leer ist (Vermeidung von Duplikaten)
+  if (filterSelect.options.length <= 1) {
+    allComments.forEach(comment => {
+      const opt = document.createElement("option");
+      opt.value = comment;
+      opt.textContent = comment;
+      filterSelect.appendChild(opt);
+    });
+  }
 }
- document.getElementById("log-ea-filter").addEventListener("change", (e) => {
+
+document.getElementById("log-filter").addEventListener("change", (e) => {
   const selected = e.target.value;
-  loadEAMessages(selected);
+  loadEAMessages(selected === "all" ? "" : selected);
 });
 
 
