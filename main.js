@@ -113,6 +113,7 @@ onAuthStateChanged(auth, async (user) => {
         fetchTradeHistory();
         loadMultiEAStatusTable();
         loadEAParameters();
+        loadEAMessages();
       });
       accountListenerSet = true;
     }
@@ -1089,7 +1090,7 @@ document.getElementById("toggle-time-axis").addEventListener("change", (e) => {
     });   
   }
  //================================================================================================================================================= LOGS LADEN
- async function loadEAMessages(selectedEA = "") {
+async function loadEAMessages(selectedEA = "") {
   const colRef = collection(db, "ea_messages");
   const snapshot = await getDocs(colRef);
 
@@ -1102,7 +1103,11 @@ document.getElementById("toggle-time-axis").addEventListener("change", (e) => {
   snapshot.forEach(doc => {
     const data = doc.data();
     const comment = data.comment || "Unbekannt";
+    const accountId = data.account_id || "";
     const messages = data.messages || [];
+
+    // Nur Logs für den aktiven Account anzeigen
+    if (accountId !== currentAccountId) return;
 
     allComments.add(comment);
 
@@ -1115,7 +1120,7 @@ document.getElementById("toggle-time-axis").addEventListener("change", (e) => {
     });
   });
 
-  // Dropdown neu aufbauen, aber nur wenn es leer ist (Vermeidung von Duplikaten)
+  // Dropdown nur einmal befüllen
   if (filterSelect.options.length <= 1) {
     allComments.forEach(comment => {
       const opt = document.createElement("option");
@@ -1125,6 +1130,7 @@ document.getElementById("toggle-time-axis").addEventListener("change", (e) => {
     });
   }
 }
+
 
 document.getElementById("log-filter").addEventListener("change", (e) => {
   const selected = e.target.value;
