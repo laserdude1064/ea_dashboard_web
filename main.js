@@ -1096,9 +1096,15 @@ async function loadEAMessages(selectedEA = "") {
 
   const logList = document.getElementById("log-list");
   const filterSelect = document.getElementById("log-filter");
+
   logList.innerHTML = "";
 
   const allComments = new Set();
+
+  // Filter zurücksetzen (alle Optionen außer "Alle EAs" entfernen)
+  for (let i = filterSelect.options.length - 1; i > 0; i--) {
+    filterSelect.remove(i);
+  }
 
   snapshot.forEach(doc => {
     const data = doc.data();
@@ -1106,7 +1112,6 @@ async function loadEAMessages(selectedEA = "") {
     const accountId = data.account_id || "";
     const messages = data.messages || [];
 
-    // Nur Logs für den aktiven Account anzeigen
     if (accountId !== currentAccountId) return;
 
     allComments.add(comment);
@@ -1120,16 +1125,15 @@ async function loadEAMessages(selectedEA = "") {
     });
   });
 
-  // Dropdown nur einmal befüllen
-  if (filterSelect.options.length <= 1) {
-    allComments.forEach(comment => {
-      const opt = document.createElement("option");
-      opt.value = comment;
-      opt.textContent = comment;
-      filterSelect.appendChild(opt);
-    });
-  }
+  // Dropdown neu befüllen
+  allComments.forEach(comment => {
+    const opt = document.createElement("option");
+    opt.value = comment;
+    opt.textContent = comment;
+    filterSelect.appendChild(opt);
+  });
 }
+
 
 
 document.getElementById("log-filter").addEventListener("change", (e) => {
