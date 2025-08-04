@@ -46,14 +46,16 @@ document.addEventListener("DOMContentLoaded", () => {
 const tab1Btn = document.getElementById("tab1-btn");
 const tab2Btn = document.getElementById("tab2-btn");
 const tab3Btn = document.getElementById("tab3-btn"); 
-
+const tab4Btn = document.getElementById("tab4-btn");
+ 
 const tab1Content = document.getElementById("tab1");
 const tab2Content = document.getElementById("tab2");
 const tab3Content = document.getElementById("tab3"); 
-
+const tab4Content = document.getElementById("tab4");
+ 
 function showTab(tabNumber) {
-  const tabs = [tab1Content, tab2Content, tab3Content]; 
-  const buttons = [tab1Btn, tab2Btn, tab3Btn];          
+  const tabs = [tab1Content, tab2Content, tab3Content, tab4Content]; 
+  const buttons = [tab1Btn, tab2Btn, tab3Btn, tab4Btn];          
 
   tabs.forEach((tab, index) => {
     if (index === tabNumber - 1) {
@@ -71,7 +73,7 @@ function showTab(tabNumber) {
 tab1Btn.addEventListener("click", () => showTab(1));
 tab2Btn.addEventListener("click", () => showTab(2));
 tab3Btn.addEventListener("click", () => showTab(3));
-
+tab4Btn.addEventListener("click", () => showTab(4));
 
   // Login / Logout
   if (loginForm) {
