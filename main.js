@@ -122,6 +122,7 @@ onAuthStateChanged(auth, async (user) => {
     loadMultiEAStatusTable();
     watchMultiEAStatusTable();
     loadEAParameters();
+    loadEAMessages();
   } else {
     loginSection.style.display = "block";
     contentSection.style.display = "none";
@@ -1086,6 +1087,7 @@ document.getElementById("toggle-time-axis").addEventListener("change", (e) => {
 
 
     });
+   //================================================================================================================================================= LOGS LADEN
   }
   async function loadEAMessages(selectedEA = "") {
   const colRef = collection(db, "ea_messages");
@@ -1109,5 +1111,10 @@ document.getElementById("toggle-time-axis").addEventListener("change", (e) => {
     });
   });
 }
+ document.getElementById("log-ea-filter").addEventListener("change", (e) => {
+  const selected = e.target.value;
+  loadEAMessages(selected);
+});
+
 
 });
