@@ -1101,7 +1101,10 @@ async function loadEAMessages(selectedEA = "") {
 
   const allComments = new Set();
 
-  // Filter zurücksetzen (alle Optionen außer "Alle EAs" entfernen)
+  // ❗️Aktuelle Auswahl merken
+  const previousSelection = filterSelect.value;
+
+  // Filter zurücksetzen (alles außer "Alle EAs" entfernen)
   for (let i = filterSelect.options.length - 1; i > 0; i--) {
     filterSelect.remove(i);
   }
@@ -1132,10 +1135,12 @@ async function loadEAMessages(selectedEA = "") {
     opt.textContent = comment;
     filterSelect.appendChild(opt);
   });
+
+  // ❗️Zuvor gewählte Option wiederherstellen (falls vorhanden)
+  if (previousSelection) {
+    filterSelect.value = previousSelection;
+  }
 }
-
-
-
 document.getElementById("log-filter").addEventListener("change", (e) => {
   const selected = e.target.value;
   loadEAMessages(selected === "all" ? "" : selected);
