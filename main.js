@@ -164,7 +164,7 @@ onAuthStateChanged(auth, async (user) => {
  }
  
 
-  // ============ Monitoring-Daten laden ============ 
+  // ========================================================================================================================== Monitoring-Daten laden ============ 
 
   function updateMonitoringStats(equity, balance, drawdown) {
     const lastEquity = equity.at(-1) || 0;
@@ -204,7 +204,7 @@ onAuthStateChanged(auth, async (user) => {
     }
   }
 
-  // ===================================================================================== Trade-Daten laden ============
+  // ========================================================================================================== Trade-Daten laden ============
 async function fetchData() {
   console.log("🔍 Lade Daten aus 'ea_monitoring_history' für Account:", currentAccountId);
   const dataList = [];
@@ -282,8 +282,6 @@ async function fetchData() {
     return max + Math.abs(max * paddingFactor);
   }
 
-  // Chart
- 
  if (portfolioChart) {
   portfolioChart.destroy();
  }
@@ -386,7 +384,7 @@ async function fetchData() {
 document.getElementById("toggle-time-axis-live").addEventListener("change", async () => {
   await fetchData();  // ruft den Chart mit neuer Achsen-Option neu auf
 });
- //========================================================================= HISTORISCHE TRADE DATEN LADEN
+ //================================================================================================================================= HISTORISCHE TRADE DATEN LADEN
 async function fetchTradeHistory() {
   if (!currentAccountId) {
     console.warn("⚠️ Kein Account ausgewählt – Trade-History wird nicht geladen.");
@@ -447,7 +445,7 @@ async function fetchTradeHistory() {
 
   renderChartForRange(defaultStart, defaultEnd);
 }
-//========================================================================= EA STATUS DATEN LADEN
+//================================================================================================================================================== EA STATUS DATEN LADEN
 function renderMultiEAStatusTable(dataList) {
   const tableBody = document.querySelector("#payload-table-body");
   const tableHead = document.querySelector("#payload-table-head");
@@ -563,7 +561,6 @@ const eaEntries = Object.entries(latestByComment);
    const bVal = b[1].TimeFilterActive ? 1 : 0;
    return aVal - bVal;
  });
-
 
  const eaNames = eaEntries.map(([name]) => name);
 
@@ -1090,6 +1087,27 @@ document.getElementById("toggle-time-axis").addEventListener("change", (e) => {
 
     });
   }
-  
+  async function loadEAMessages(selectedEA = "") {
+  const colRef = collection(db, "ea_messages");
+  const snapshot = await getDocs(colRef);
+
+  const logList = document.getElementById("log-list");
+  logList.innerHTML = ""; // Liste zurücksetzen
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    const comment = data.comment || "Unbekannt";
+    const messages = data.messages || [];
+
+    // Wenn ein spezifischer EA ausgewählt ist, filtern
+    if (selectedEA && selectedEA !== comment) return;
+
+    messages.forEach(msg => {
+      const li = document.createElement("li");
+      li.textContent = `[${comment}] ${msg}`;
+      logList.appendChild(li);
+    });
+  });
+}
 
 });
