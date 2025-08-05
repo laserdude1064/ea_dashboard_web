@@ -421,7 +421,7 @@ async function fetchTradeHistory() {
  
 let tradeList = [];
 let useTimeAxis = false;
- 
+
 function renderChartForRange(startDate, endDate) {
   const eaLegendContainer = document.getElementById("ea-legend");
   if (!eaLegendContainer) {
@@ -430,8 +430,6 @@ function renderChartForRange(startDate, endDate) {
   }
 
   const eaCommentPattern = /^Lasertrader_V\d{3}(?:_[A-Z]{6}_[A-Z]{2,})?$/;
-
-  // Schritt 1: Kommentare für Schließ-Deals übernehmen
   const positionToComment = {};
   tradeList.forEach(t => {
     if (eaCommentPattern.test(t.comment) && t.position_id !== undefined) {
@@ -441,16 +439,13 @@ function renderChartForRange(startDate, endDate) {
 
   const filtered = tradeList
     .map(t => {
-      const updatedComment = eaCommentPattern.test(t.comment)
-        ? t.comment
-        : positionToComment[t.position_id] || null;
+      const updatedComment = eaCommentPattern.test(t.comment) ? t.comment : positionToComment[t.position_id] || null;
       return { ...t, comment: updatedComment };
     })
     .filter(t => new Date(t.time) >= startDate && new Date(t.time) <= endDate)
     .sort((a, b) => new Date(a.time) - new Date(b.time));
 
-  const eaGroups = {};
-  const colors = {};
+  const eaGroups = {}, colors = {};
   const colorPalette = ["#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#46f0f0", "#f032e6", "#bcf60c", "#fabebe"];
   let colorIndex = 0;
 
@@ -464,17 +459,11 @@ function renderChartForRange(startDate, endDate) {
     eaGroups[comment].push(t);
   });
 
-  // Datensätze
   const datasets = [];
-
-  // Portfolio-Datensatz
   let totalCum = 0;
   const totalData = filtered.map((t, i) => {
     totalCum += t.profit;
-    return {
-      x: useTimeAxis ? new Date(t.time) : i,
-      y: totalCum
-    };
+    return { x: useTimeAxis ? new Date(t.time) : i, y: totalCum };
   });
 
   datasets.push({
@@ -485,39 +474,29 @@ function renderChartForRange(startDate, endDate) {
     borderDash: [5, 5],
     fill: false,
     tension: 0.1,
-    hidden: false // Standard: sichtbar
+    hidden: false
   });
 
-  // EA-Datensätze
   for (const comment of Object.keys(eaGroups)) {
     let cum = 0;
     const group = eaGroups[comment];
     const data = group.map(t => {
       cum += t.profit;
-      return {
-        x: useTimeAxis ? new Date(t.time) : undefined,
-        y: cum
-      };
+      return { x: useTimeAxis ? new Date(t.time) : undefined, y: cum };
     });
 
     datasets.push({
       label: comment,
-      data: data.map((d, i) => ({
-        x: useTimeAxis ? new Date(group[i].time) : i,
-        y: d.y
-      })),
+      data: data.map((d, i) => ({ x: useTimeAxis ? new Date(group[i].time) : i, y: d.y })),
       borderColor: colors[comment],
       fill: false,
       tension: 0.1,
-      hidden: true // Standard: unsichtbar
+      hidden: true
     });
   }
 
-  // Chart erzeugen
   const ctx = document.getElementById("chart-trades").getContext("2d");
   if (tradeChart) tradeChart.destroy();
-
-  if (tradeChart) {tradeChart.destroy();}
   tradeChart = new Chart(ctx, {
     type: "line",
     data: { datasets },
@@ -528,7 +507,7 @@ function renderChartForRange(startDate, endDate) {
           display: true,
           text: `Trades vom ${startDate.toISOString().split("T")[0]} bis ${endDate.toISOString().split("T")[0]}`
         },
-        legend: { display: false } // Eigene Legende verwenden
+        legend: { display: false }
       },
       scales: {
         x: useTimeAxis
@@ -539,7 +518,6 @@ function renderChartForRange(startDate, endDate) {
     }
   });
 
-  // Interaktive Legende mit Checkboxen
   eaLegendContainer.innerHTML = "";
   datasets.forEach((ds, index) => {
     const wrapper = document.createElement("div");
@@ -579,7 +557,6 @@ function renderChartForRange(startDate, endDate) {
   updateMonthlyProfitTable(tradeList);
 }
 
-
 document.getElementById("toggle-time-axis").addEventListener("change", (e) => {
   useTimeAxis = e.target.checked;
   if (tradeList.length > 0) {
@@ -588,109 +565,111 @@ document.getElementById("toggle-time-axis").addEventListener("change", (e) => {
     renderChartForRange(start, end);
   }
 });
-  function updateTradeStats(trades) {
-    if (trades.length === 0) {
-      statsTradesBody.innerHTML = "<tr><td colspan='2' style='text-align:center'>Keine Trades im gewählten Zeitraum</td></tr>";
-      return;
-    }
-
-    const profits = trades.map(t => t.profit);
-    const total = profits.reduce((a, b) => a + b, 0);
-    const avg = total / profits.length;
-    const max = Math.max(...profits);
-    const min = Math.min(...profits);
-    const wins = profits.filter(p => p > 0).length;
-    const losses = profits.filter(p => p <= 0).length;
-
-    let peak = 0, dd = 0, maxDD = 0, running = 0;
-    for (let p of profits) {
-      running += p;
-      if (running > peak) peak = running;
-      dd = peak - running;
-      if (dd > maxDD) maxDD = dd;
-    }
-
-    const recovery = maxDD > 0 ? total / maxDD : "–";
-    const stdDev = Math.sqrt(profits.map(p => (p - avg) ** 2).reduce((a, b) => a + b, 0) / profits.length);
-    const sharpe = stdDev > 0 ? avg / stdDev : "–";
-    const gain = profits.filter(p => p > 0).reduce((a, b) => a + b, 0);
-    const loss = profits.filter(p => p < 0).reduce((a, b) => a + b, 0);
-    const pf = loss < 0 ? gain / Math.abs(loss) : "–";
-
-    const stats = [
-      ["Anzahl Trades", trades.length],
-      ["Gesamter Gewinn", total.toFixed(2) + " €"],
-      ["Durchschnittlicher Gewinn", avg.toFixed(2) + " €"],
-      ["Maximaler Gewinn", max.toFixed(2) + " €"],
-      ["Maximaler Verlust", min.toFixed(2) + " €"],
-      ["Gewonnene Trades", wins],
-      ["Verlorene Trades", losses],
-      ["Recovery Factor", typeof recovery === "number" ? recovery.toFixed(2) : recovery],
-      ["Sharpe Ratio", typeof sharpe === "number" ? sharpe.toFixed(2) : sharpe],
-      ["Profit Factor", typeof pf === "number" ? pf.toFixed(2) : pf]
-    ];
-
-    statsTradesBody.innerHTML = "";
-    for (const [label, value] of stats) {
-      const row = document.createElement("tr");
-      row.innerHTML = `<td>${label}</td><td style="text-align:right">${value}</td>`;
-      statsTradesBody.appendChild(row);
-    }
+ 
+function updateTradeStats(trades) {
+  if (trades.length === 0) {
+    statsTradesBody.innerHTML = "<tr><td colspan='2' style='text-align:center'>Keine Trades im gewählten Zeitraum</td></tr>";
+    return;
   }
-  function updateMonthlyProfitTable(trades) {
-    const monthly = {};
+
+  const profits = trades.map(t => t.profit);
+  const total = profits.reduce((a, b) => a + b, 0);
+  const avg = total / profits.length;
+  const max = Math.max(...profits);
+  const min = Math.min(...profits);
+  const wins = profits.filter(p => p > 0).length;
+  const losses = profits.filter(p => p <= 0).length;
+
+  let peak = 0, dd = 0, maxDD = 0, running = 0;
+  for (let p of profits) {
+    running += p;
+    if (running > peak) peak = running;
+    dd = peak - running;
+    if (dd > maxDD) maxDD = dd;
+  }
+
+  const recovery = maxDD > 0 ? total / maxDD : "–";
+  const stdDev = Math.sqrt(profits.map(p => (p - avg) ** 2).reduce((a, b) => a + b, 0) / profits.length);
+  const sharpe = stdDev > 0 ? avg / stdDev : "–";
+  const gain = profits.filter(p => p > 0).reduce((a, b) => a + b, 0);
+  const loss = profits.filter(p => p < 0).reduce((a, b) => a + b, 0);
+  const pf = loss < 0 ? gain / Math.abs(loss) : "–";
+
+  const stats = [
+    ["Anzahl Trades", trades.length],
+    ["Gesamter Gewinn", total.toFixed(2) + " €"],
+    ["Durchschnittlicher Gewinn", avg.toFixed(2) + " €"],
+    ["Maximaler Gewinn", max.toFixed(2) + " €"],
+    ["Maximaler Verlust", min.toFixed(2) + " €"],
+    ["Gewonnene Trades", wins],
+    ["Verlorene Trades", losses],
+    ["Recovery Factor", typeof recovery === "number" ? recovery.toFixed(2) : recovery],
+    ["Sharpe Ratio", typeof sharpe === "number" ? sharpe.toFixed(2) : sharpe],
+    ["Profit Factor", typeof pf === "number" ? pf.toFixed(2) : pf]
+  ];
+
+  statsTradesBody.innerHTML = "";
+  for (const [label, value] of stats) {
+    const row = document.createElement("tr");
+    row.innerHTML = `<td>${label}</td><td style="text-align:right">${value}</td>`;
+    statsTradesBody.appendChild(row);
+  }
+}
+ 
+function updateMonthlyProfitTable(trades) {
+  const monthly = {};
+
+  // Trades nach Jahr und Monat gruppieren
+  trades.forEach(t => {
+    const date = new Date(t.time);
+    const year = date.getFullYear();
+    const month = date.getMonth(); // 0-basiert
+
+    const key = `${year}-${month}`;
+    if (!monthly[key]) monthly[key] = 0;
+    monthly[key] += t.profit;
+  });
+
+  const years = [...new Set(Object.keys(monthly).map(k => parseInt(k.split("-")[0])))].sort();
+  const tbody = document.getElementById("monthly-profit-body");
+  tbody.innerHTML = "";
+
+  years.forEach(year => {
+    const row = document.createElement("tr");
+    const cells = [`<td><strong>${year}</strong></td>`];
+
+    for (let i = 0; i < 12; i++) {
+      const key = `${year}-${i}`;
+      const profit = monthly[key] || 0;
+      cells.push(`<td style="text-align:right; cursor:pointer;" data-year="${year}" data-month="${i}">${profit.toFixed(2)} €</td>`);
+    }
+  row.innerHTML = cells.join("");
+  tbody.appendChild(row);
   
-    // Trades nach Jahr und Monat gruppieren
-    trades.forEach(t => {
-      const date = new Date(t.time);
-      const year = date.getFullYear();
-      const month = date.getMonth(); // 0-basiert
-  
-      const key = `${year}-${month}`;
-      if (!monthly[key]) monthly[key] = 0;
-      monthly[key] += t.profit;
-    });
-  
-    const years = [...new Set(Object.keys(monthly).map(k => parseInt(k.split("-")[0])))].sort();
-    const tbody = document.getElementById("monthly-profit-body");
-    tbody.innerHTML = "";
-  
-    years.forEach(year => {
-      const row = document.createElement("tr");
-      const cells = [`<td><strong>${year}</strong></td>`];
-  
-      for (let i = 0; i < 12; i++) {
-        const key = `${year}-${i}`;
-        const profit = monthly[key] || 0;
-        cells.push(`<td style="text-align:right; cursor:pointer;" data-year="${year}" data-month="${i}">${profit.toFixed(2)} €</td>`);
-      }
-    row.innerHTML = cells.join("");
-    tbody.appendChild(row);
-    
-    // Klick-Handler für Monatszellen
-    row.querySelectorAll("td[data-year][data-month]").forEach(cell => {
-      cell.addEventListener("click", () => {
-        const y = parseInt(cell.dataset.year);
-        const m = parseInt(cell.dataset.month);
-        const start = new Date(y, m, 1);
-        const end = new Date(y, m + 1, 0, 23, 59, 59);
-        renderChartForRange(start, end);
-      });
-    });
-    
-    // Klick-Handler für Jahreszelle
-    const yearCell = row.querySelector("td:first-child");
-    yearCell.style.cursor = "pointer";
-    yearCell.addEventListener("click", () => {
-      const y = parseInt(yearCell.textContent);
-      const start = new Date(y, 0, 1);
-      const end = new Date(y, 11, 31, 23, 59, 59);
+  // Klick-Handler für Monatszellen
+  row.querySelectorAll("td[data-year][data-month]").forEach(cell => {
+    cell.addEventListener("click", () => {
+      const y = parseInt(cell.dataset.year);
+      const m = parseInt(cell.dataset.month);
+      const start = new Date(y, m, 1);
+      const end = new Date(y, m + 1, 0, 23, 59, 59);
       renderChartForRange(start, end);
     });
+  });
+  
+  // Klick-Handler für Jahreszelle
+  const yearCell = row.querySelector("td:first-child");
+  yearCell.style.cursor = "pointer";
+  yearCell.addEventListener("click", () => {
+    const y = parseInt(yearCell.textContent);
+    const start = new Date(y, 0, 1);
+    const end = new Date(y, 11, 31, 23, 59, 59);
+    renderChartForRange(start, end);
+  });
 
 
-    });   
-  }
+  });   
+}
 //================================================================================================================================================== EA STATUS DATEN LADEN
 function renderMultiEAStatusTable(dataList) {
   const openSections = new Set();
