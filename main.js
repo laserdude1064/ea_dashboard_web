@@ -597,30 +597,36 @@ const eaEntries = Object.entries(latestByComment);
     }
   
     // Neue Sektion erkannt → collapsible starten
-    if (field.startsWith("__")) {
-      const sectionTitle = field.slice(2);
-  
-      // Neues tbody starten für collapsible section
-      currentSectionBody = document.createElement("tbody");
-      currentSectionBody.style.display = "none"; // Start: eingeklappt
-      currentSectionBody.classList.add("collapsible-section");
-  
-      // Head-Zeile mit Klickfunktion
-      const toggleRow = document.createElement("tr");
-      toggleRow.style.background = "#eee";
-      toggleRow.style.fontWeight = "bold";
-      toggleRow.style.cursor = "pointer";
-      toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">▶ ${sectionTitle}</td>`;
-      toggleRow.addEventListener("click", () => {
-        const isVisible = currentSectionBody.style.display === "table-row-group";
-        currentSectionBody.style.display = isVisible ? "none" : "table-row-group";
-        toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">${isVisible ? "▶" : "▼"} ${sectionTitle}</td>`;
-      });
-  
-      tableBody.appendChild(toggleRow);
-      tableBody.appendChild(currentSectionBody);
-      return;
-    }
+if (field.startsWith("__")) {
+  const sectionTitle = field.slice(2);
+
+  // Neues tbody für diese Sektion
+  const sectionBody = document.createElement("tbody");
+  sectionBody.style.display = "none";
+  sectionBody.classList.add("collapsible-section");
+
+  // Überschriftszeile mit Klickfunktion
+  const toggleRow = document.createElement("tr");
+  toggleRow.style.background = "#eee";
+  toggleRow.style.fontWeight = "bold";
+  toggleRow.style.cursor = "pointer";
+  toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">▶ ${sectionTitle}</td>`;
+
+  // 👉 Toggle-Handler mit closure auf sectionBody
+  toggleRow.addEventListener("click", () => {
+    const isVisible = sectionBody.style.display === "table-row-group";
+    sectionBody.style.display = isVisible ? "none" : "table-row-group";
+    toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">${isVisible ? "▶" : "▼"} ${sectionTitle}</td>`;
+  });
+
+  // in Tabelle einfügen
+  tableBody.appendChild(toggleRow);
+  tableBody.appendChild(sectionBody);
+
+  currentSectionBody = sectionBody; // weiter unten in der Schleife genutzt
+  return;
+}
+
   
     // Zeile rendern
     const row = document.createElement("tr");
