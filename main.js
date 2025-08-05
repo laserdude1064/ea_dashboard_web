@@ -299,7 +299,7 @@ const filteredDrawdown = drawdown.map(d => (d >= 0 ? d : 0));
  if (portfolioChart) {
   portfolioChart.destroy();
  }
- portfolioChart = new Chart(ctx, {
+portfolioChart = new Chart(ctx, {
   type: "bar",
   data: {
     labels: labels,
@@ -348,9 +348,21 @@ const filteredDrawdown = drawdown.map(d => (d >= 0 ? d : 0));
           display: true,
           text: xTitle
         },
-        ticks: {
-          stepSize: useTimeAxis ? undefined : 1
-        },
+        ticks: useTimeAxis
+          ? {
+              autoSkip: false,
+              callback: function (value, index, ticks) {
+                const date = new Date(value);
+                const minutes = date.getMinutes();
+                if (minutes === 0 || minutes === 30) {
+                  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                }
+                return "";
+              }
+            }
+          : {
+              stepSize: 1
+            },
         time: useTimeAxis
           ? {
               tooltipFormat: "dd.MM.yyyy HH:mm",
@@ -360,7 +372,9 @@ const filteredDrawdown = drawdown.map(d => (d >= 0 ? d : 0));
                 minute: "HH:mm",
                 hour: "HH:mm",
                 day: "dd.MM"
-              }
+              },
+              unit: "minute",
+              stepSize: 1
             }
           : undefined
       },
@@ -392,6 +406,7 @@ const filteredDrawdown = drawdown.map(d => (d >= 0 ? d : 0));
     }
   }
 });
+
 
   updateMonitoringStats(equity, balance, drawdown);
 }
