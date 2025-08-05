@@ -449,6 +449,15 @@ async function fetchTradeHistory() {
 }
 //================================================================================================================================================== EA STATUS DATEN LADEN
 function renderMultiEAStatusTable(dataList) {
+  const openSections = new Set();
+  document.querySelectorAll(".collapsible-toggle").forEach(toggleRow => {
+    const text = toggleRow.textContent;
+    if (text.startsWith("▼")) {
+      const sectionTitle = text.replace(/^▼\s*/, "").trim();
+      openSections.add(sectionTitle);
+    }
+  });
+ 
   const tableBody = document.querySelector("#payload-table-body");
   const tableHead = document.querySelector("#payload-table-head");
   tableBody.innerHTML = "";
@@ -591,38 +600,43 @@ const eaEntries = Object.entries(latestByComment);
     }
   
     // Neue Sektion erkannt → collapsible starten
-   if (field.startsWith("__")) {
-     const sectionTitle = field.slice(2);
-     const sectionClass = `section-${sectionTitle.replace(/\s+/g, "-")}`;
-   
-     const toggleRow = document.createElement("tr");
-     toggleRow.classList.add("collapsible-toggle");
-     toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">▶ ${sectionTitle}</td>`;
-   
-     toggleRow.addEventListener("click", () => {
-       const rows = tableBody.querySelectorAll(`.${sectionClass}`);
-       const isVisible = rows.length && rows[0].style.display !== "none";
-       rows.forEach(row => {
-         row.style.display = isVisible ? "none" : "table-row";
-       });
-       toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">${isVisible ? "▶" : "▼"} ${sectionTitle}</td>`;
-     });
-   
-     tableBody.appendChild(toggleRow);
-     currentSectionBody = sectionClass;
-     return;
-}
-
+    if (field.startsWith("__")) {
+      const sectionTitle = field.slice(2);
+      const sectionClass = `section-${sectionTitle.replace(/\s+/g, "-")}`;
+    
+      const toggleRow = document.createElement("tr");
+      toggleRow.classList.add("collapsible-toggle");
+      let initiallyOpen = openSections.has(sectionTitle);
+    
+      toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">${initiallyOpen ? "▼" : "▶"} ${sectionTitle}</td>`;
+    
+      toggleRow.addEventListener("click", () => {
+        const rows = tableBody.querySelectorAll(`.${sectionClass}`);
+        const isVisible = rows.length && rows[0].style.display !== "none";
+        rows.forEach(row => {
+          row.style.display = isVisible ? "none" : "table-row";
+        });
+        toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">${isVisible ? "▶" : "▼"} ${sectionTitle}</td>`;
+      });
+    
+      tableBody.appendChild(toggleRow);
+      currentSectionBody = sectionClass;
+    
+      return;
+    }
     // Zeile rendern
     const row = document.createElement("tr");
 
   // wenn eine Sektion aktiv ist, zuordnen und standardmäßig verstecken
   if (currentSectionBody) {
     row.classList.add(currentSectionBody);
-    row.style.display = "none";
+    const sectionTitle = currentSectionBody.replace(/^section-/, "").replace(/-/g, " ");
+    if (!openSections.has(sectionTitle)) {
+      row.style.display = "none";
+    }
   }
    
-    row.innerHTML = `<td><strong>${field}</strong></td>`;
+   row.innerHTML = `<td><strong>${field}</strong></td>`;
   
   eaEntries.forEach(([name, eaData]) => {
     let value = "-";
