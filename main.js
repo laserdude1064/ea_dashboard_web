@@ -591,29 +591,28 @@ const eaEntries = Object.entries(latestByComment);
     }
   
     // Neue Sektion erkannt → collapsible starten
-if (field.startsWith("__")) {
-  const sectionTitle = field.slice(2);
-  const sectionClass = `section-${sectionTitle.replace(/\s+/g, "-")}`;
-
-  // Toggle-Zeile mit Titel
-  const toggleRow = document.createElement("tr");
-  toggleRow.classList.add("collapsible-toggle");
-  toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">▶ ${sectionTitle}</td>`;
-
-  // Toggle-Handler
-  toggleRow.addEventListener("click", () => {
-    const rows = tableBody.querySelectorAll(`.${sectionClass}`);
-    const isVisible = rows.length && rows[0].style.display !== "none";
-    rows.forEach(row => {
-      row.style.display = isVisible ? "none" : "table-row";
-    });
-    toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">${isVisible ? "▶" : "▼"} ${sectionTitle}</td>`;
-  });
-
-  tableBody.appendChild(toggleRow);
-  currentSectionBody = sectionClass;
-  return;
+   if (field.startsWith("__")) {
+     const sectionTitle = field.slice(2);
+     const sectionClass = `section-${sectionTitle.replace(/\s+/g, "-")}`;
+   
+     const toggleRow = document.createElement("tr");
+     toggleRow.classList.add("collapsible-toggle");
+     toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">▶ ${sectionTitle}</td>`;
+   
+     toggleRow.addEventListener("click", () => {
+       const rows = tableBody.querySelectorAll(`.${sectionClass}`);
+       const isVisible = rows.length && rows[0].style.display !== "none";
+       rows.forEach(row => {
+         row.style.display = isVisible ? "none" : "table-row";
+       });
+       toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">${isVisible ? "▶" : "▼"} ${sectionTitle}</td>`;
+     });
+   
+     tableBody.appendChild(toggleRow);
+     currentSectionBody = sectionClass;
+     return;
 }
+
     // Zeile rendern
     const row = document.createElement("tr");
 
@@ -625,37 +624,35 @@ if (field.startsWith("__")) {
    
     row.innerHTML = `<td><strong>${field}</strong></td>`;
   
-    eaEntries.forEach(([name, eaData]) => {
-      let value = "-";
-      const paramData = cachedParametersByComment[name] || {};
+  eaEntries.forEach(([name, eaData]) => {
+    let value = "-";
+    const paramData = cachedParametersByComment[name] || {};
   
-      if (eaData[field] !== undefined) {
-        if (field === "received_at") {
-          const date = new Date(eaData[field]);
-          const now = new Date();
-          const diffMs = now - date;
-          const diffMin = diffMs / 1000 / 60;  
-          const h = String(date.getHours()).padStart(2, '0');
-          const m = String(date.getMinutes()).padStart(2, '0');
-          const s = String(date.getSeconds()).padStart(2, '0');
-          value = `${h}:${m}:${s}`;
-          row.innerHTML += `<td class="${diffMin > 5 ? 'highlight' : ''}">${value}</td>`;
-          return;
-        } else {
-          value = formatValue(eaData[field]);
-        }
-      } else if (paramData[field] !== undefined) {
-        value = formatValue(paramData[field]);
+    if (eaData[field] !== undefined) {
+      if (field === "received_at") {
+        const date = new Date(eaData[field]);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMin = diffMs / 1000 / 60;
+  
+        const h = String(date.getHours()).padStart(2, '0');
+        const m = String(date.getMinutes()).padStart(2, '0');
+        const s = String(date.getSeconds()).padStart(2, '0');
+        value = `${h}:${m}:${s}`;
+  
+        row.innerHTML += `<td class="${diffMin > 5 ? 'highlight' : ''}">${value}</td>`;
+        return; // ❌ FEHLER: bricht loop zu früh ab → ❗ entfernt
+      } else {
+        value = formatValue(eaData[field]);
       }
-  
-      row.innerHTML += `<td>${value}</td>`;
-    });
-  
-    if (currentSectionBody) {
-      currentSectionBody.appendChild(row);  // einklappbarer Block
-    } else {
-      tableBody.appendChild(row);          // normaler Block
+    } else if (paramData[field] !== undefined) {
+      value = formatValue(paramData[field]);
     }
+  
+    row.innerHTML += `<td>${value}</td>`;
+});
+  
+  tableBody.appendChild(row);
 });
 
 }
