@@ -544,13 +544,9 @@ function renderMultiEAStatusTable(dataList) {
 
 const eaEntries = Object.entries(latestByComment);
  eaEntries.sort((a, b) => {
-   const commentA = a[0];
-   const commentB = b[0];
- 
-   const endsWith = (str, suffix) => str.endsWith(suffix) ? 1 : 0;
- 
-   // MR-EAs sollen zuerst, dann TF, dann der Rest
-   const aMR = endsWith(commentA, "MR");
+   const commentA = a[0], const commentB = b[0]; 
+   const endsWith = (str, suffix) => str.endsWith(suffix) ? 1 : 0; 
+   const aMR = endsWith(commentA, "MR");     // MR-EAs sollen zuerst, dann TF, dann der Rest
    const bMR = endsWith(commentB, "MR");
    if (aMR !== bMR) return bMR - aMR;
  
@@ -565,8 +561,7 @@ const eaEntries = Object.entries(latestByComment);
  });
 
  const eaNames = eaEntries.map(([name]) => name);
-
-  eaEntries.forEach(([name, eaData]) => {
+ eaEntries.forEach(([name, eaData]) => {         // Parameterdaten ergänzen
     const params = cachedParametersByComment[name];
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -583,15 +578,14 @@ const eaEntries = Object.entries(latestByComment);
   tableHead.appendChild(headRow);
   
   const allFields = [...fieldOrder, ...parameterFieldOrder];
-  let insertedParameterDivider = false;
-  
+  let insertedParameterDivider = false;  
   let currentSectionBody = null;
   
   allFields.forEach(field => {
     // Trennlinie vor Parameterbereich
     if (!insertedParameterDivider && !fieldOrder.includes(field)) {
       const dividerRow = document.createElement("tr");
-      dividerRow.innerHTML = `<td colspan="${eaNames.length + 1}" style="border-top: 4px solid black;"></td>`;
+      dividerRow.innerHTML = `<td colspan="${eaNames.length + 1}" class="table-divider"></td>`;
       tableBody.appendChild(dividerRow);
       insertedParameterDivider = true;
     }
@@ -606,11 +600,9 @@ if (field.startsWith("__")) {
   sectionBody.classList.add("collapsible-section");
 
   // Überschriftszeile mit Klickfunktion
-  const toggleRow = document.createElement("tr");
-  toggleRow.style.background = "#eee";
-  toggleRow.style.fontWeight = "bold";
-  toggleRow.style.cursor = "pointer";
-  toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">▶ ${sectionTitle}</td>`;
+   const toggleRow = document.createElement("tr");
+   toggleRow.classList.add("collapsible-toggle");
+   toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">▶ ${sectionTitle}</td>`;
 
   // 👉 Toggle-Handler mit closure auf sectionBody
   toggleRow.addEventListener("click", () => {
@@ -622,7 +614,6 @@ if (field.startsWith("__")) {
   // in Tabelle einfügen
   tableBody.appendChild(toggleRow);
   tableBody.appendChild(sectionBody);
-
   currentSectionBody = sectionBody; // weiter unten in der Schleife genutzt
   return;
 }  
@@ -632,7 +623,6 @@ if (field.startsWith("__")) {
   
     eaEntries.forEach(([name, eaData]) => {
       let value = "-";
-      let cellStyle = "text-align:right;";
       const paramData = cachedParametersByComment[name] || {};
   
       if (eaData[field] !== undefined) {
@@ -640,16 +630,13 @@ if (field.startsWith("__")) {
           const date = new Date(eaData[field]);
           const now = new Date();
           const diffMs = now - date;
-          const diffMin = diffMs / 1000 / 60;
-  
+          const diffMin = diffMs / 1000 / 60;  
           const h = String(date.getHours()).padStart(2, '0');
           const m = String(date.getMinutes()).padStart(2, '0');
           const s = String(date.getSeconds()).padStart(2, '0');
-  
           value = `${h}:${m}:${s}`;
-          if (diffMin > 5) {
-            cellStyle += "background-color:#FFEB3B;";
-          }
+          row.innerHTML += `<td class="${diffMin > 5 ? 'highlight' : ''}">${value}</td>`;
+          return;
         } else {
           value = formatValue(eaData[field]);
         }
@@ -657,7 +644,7 @@ if (field.startsWith("__")) {
         value = formatValue(paramData[field]);
       }
   
-      row.innerHTML += `<td style="${cellStyle}">${value}</td>`;
+      row.innerHTML += `<td>${value}</td>`;
     });
   
     if (currentSectionBody) {
