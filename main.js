@@ -596,7 +596,7 @@ if (field.startsWith("__")) {
 
   // Neues tbody für diese Sektion
   const sectionBody = document.createElement("tbody");
-  sectionBody.style.display = "none";
+  sectionBody.style.visibility = "collapse";
   sectionBody.classList.add("collapsible-section");
 
   // Überschriftszeile mit Klickfunktion
@@ -607,7 +607,7 @@ if (field.startsWith("__")) {
   // 👉 Toggle-Handler mit closure auf sectionBody
   toggleRow.addEventListener("click", () => {
     const isVisible = sectionBody.style.display === "table-row-group";
-    sectionBody.style.display = isVisible ? "none" : "table-row-group";
+    sectionBody.style.visibility = isVisible ? "collapse" : "visible";
     toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">${isVisible ? "▶" : "▼"} ${sectionTitle}</td>`;
   });
 
