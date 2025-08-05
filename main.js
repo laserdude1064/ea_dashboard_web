@@ -189,7 +189,7 @@ onAuthStateChanged(auth, async (user) => {
     const stats = [
       ["Aktuelle Balance", `${lastBalance.toFixed(2)} €`],
       ["Balance-Wachstum", `${growth.toFixed(2)} %`],
-      ["Aktueller Equity", `${lastEquity.toFixed(2)} €`],
+      ["Aktuelle Equity", `${lastEquity.toFixed(2)} €`],
       ["Gewinn seit Start", `${profit.toFixed(2)} €`],
       ["Maximaler Drawdown (%)", `${maxDD.toFixed(2)} %`],
       ["Maximaler Drawdown (absolut)", `${maxDDAbs.toFixed(2)} €`],
@@ -576,78 +576,93 @@ const eaEntries = Object.entries(latestByComment);
       });
     }
   });
- 
-  // Tabellenkopf
+   
+   // Tabellenkopf
   const headRow = document.createElement("tr");
   headRow.innerHTML = `<th>Parameter</th>` + eaNames.map(name => `<th>${name}</th>`).join("");
   tableHead.appendChild(headRow);
-
-  // Zusätzliche Felder erfassen
-  const extraFields = new Set();
-  Object.values(latestByComment).forEach(data => {
-    Object.keys(data).forEach(field => {
-      if (!fieldOrder.includes(field) && field !== "timestamp" && field !== "comment") {
-        extraFields.add(field);
-      }
-    });
-  });
- 
+  
   const allFields = [...fieldOrder, ...parameterFieldOrder];
   let insertedParameterDivider = false;
- 
- // Zeilen schreiben
- allFields.forEach(field => {
-      // Dicke Linie vor Parameterblock
-  if (!insertedParameterDivider && !fieldOrder.includes(field)) {
-    const dividerRow = document.createElement("tr");
-    dividerRow.innerHTML = `<td colspan="${eaNames.length + 1}" style="border-top: 4px solid black;"></td>`;
-    tableBody.appendChild(dividerRow);
-    insertedParameterDivider = true;
-  }
-  if (field.startsWith("__")) {
-    const titleRow = document.createElement("tr");
-    titleRow.innerHTML = `<td colspan="${eaNames.length + 1}" style="background:#eee; font-weight:bold;">${field.slice(2)}</td>`;
-    tableBody.appendChild(titleRow);
-    return;
-  }
-   const row = document.createElement("tr");
-    
-   row.innerHTML = `<td><strong>${field}</strong></td>`;
- 
-   eaEntries.forEach(([name, eaData]) => {
-     let value = "-";
-     let cellStyle = "text-align:right;";
-     const paramData = cachedParametersByComment[name] || {};
- 
-     if (eaData[field] !== undefined) {
-       // Spezielle Behandlung für received_at
-       if (field === "received_at") {
-         const date = new Date(eaData[field]);
-         const now = new Date();
-         const diffMs = now - date;
-         const diffMin = diffMs / 1000 / 60;
- 
-         const h = String(date.getHours()).padStart(2, '0');
-         const m = String(date.getMinutes()).padStart(2, '0');
-         const s = String(date.getSeconds()).padStart(2, '0');
- 
-         value = `${h}:${m}:${s}`;
- 
-         if (diffMin > 5) {
-           cellStyle += "background-color:#FFEB3B;";
-         }
-       } else {
-         value = formatValue(eaData[field]);
-       }
-     } else if (paramData[field] !== undefined) {
-      value = formatValue(paramData[field]);
-     }
- 
-     row.innerHTML += `<td style="${cellStyle}">${value}</td>`;
-   });
- 
-   tableBody.appendChild(row);
- });
+  
+  let currentSectionBody = null;
+  
+  allFields.forEach(field => {
+    // Trennlinie vor Parameterbereich
+    if (!insertedParameterDivider && !fieldOrder.includes(field)) {
+      const dividerRow = document.createElement("tr");
+      dividerRow.innerHTML = `<td colspan="${eaNames.length + 1}" style="border-top: 4px solid black;"></td>`;
+      tableBody.appendChild(dividerRow);
+      insertedParameterDivider = true;
+    }
+  
+    // Neue Sektion erkannt → collapsible starten
+    if (field.startsWith("__")) {
+      const sectionTitle = field.slice(2);
+  
+      // Neues tbody starten für collapsible section
+      currentSectionBody = document.createElement("tbody");
+      currentSectionBody.style.display = "none"; // Start: eingeklappt
+      currentSectionBody.classList.add("collapsible-section");
+  
+      // Head-Zeile mit Klickfunktion
+      const toggleRow = document.createElement("tr");
+      toggleRow.style.background = "#eee";
+      toggleRow.style.fontWeight = "bold";
+      toggleRow.style.cursor = "pointer";
+      toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">▶ ${sectionTitle}</td>`;
+      toggleRow.addEventListener("click", () => {
+        const isVisible = currentSectionBody.style.display === "table-row-group";
+        currentSectionBody.style.display = isVisible ? "none" : "table-row-group";
+        toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">${isVisible ? "▶" : "▼"} ${sectionTitle}</td>`;
+      });
+  
+      tableBody.appendChild(toggleRow);
+      tableBody.appendChild(currentSectionBody);
+      return;
+    }
+  
+    // Zeile rendern
+    const row = document.createElement("tr");
+    row.innerHTML = `<td><strong>${field}</strong></td>`;
+  
+    eaEntries.forEach(([name, eaData]) => {
+      let value = "-";
+      let cellStyle = "text-align:right;";
+      const paramData = cachedParametersByComment[name] || {};
+  
+      if (eaData[field] !== undefined) {
+        if (field === "received_at") {
+          const date = new Date(eaData[field]);
+          const now = new Date();
+          const diffMs = now - date;
+          const diffMin = diffMs / 1000 / 60;
+  
+          const h = String(date.getHours()).padStart(2, '0');
+          const m = String(date.getMinutes()).padStart(2, '0');
+          const s = String(date.getSeconds()).padStart(2, '0');
+  
+          value = `${h}:${m}:${s}`;
+          if (diffMin > 5) {
+            cellStyle += "background-color:#FFEB3B;";
+          }
+        } else {
+          value = formatValue(eaData[field]);
+        }
+      } else if (paramData[field] !== undefined) {
+        value = formatValue(paramData[field]);
+      }
+  
+      row.innerHTML += `<td style="${cellStyle}">${value}</td>`;
+    });
+  
+    if (currentSectionBody) {
+      currentSectionBody.appendChild(row);  // einklappbarer Block
+    } else {
+      tableBody.appendChild(row);          // normaler Block
+    }
+});
+
 
 }
 
