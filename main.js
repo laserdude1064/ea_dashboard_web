@@ -216,23 +216,29 @@ async function fetchData() {
     return;
   }
  
-  // 1. Daten aus `ea_monitoring_history` holen (alle Dokumente)
-  const historySnapshot = await getDocs(collection(db, "ea_monitoring_history"));
-  historySnapshot.forEach(doc => {
-    const d = doc.data();
-    const entries = d?.entries || [];
-    entries.forEach(item => {
-      if (
-        item.account_id === currentAccountId &&
-        item.timestamp &&
-        typeof item.equity === "number" &&
-        typeof item.balance === "number" &&
-        typeof item.drawdown === "number"
-      ) {
-        dataList.push(item);
-      }
-    });
+// 1. Daten aus `ea_monitoring_history` holen (alle Dokumente)
+const historySnapshot = await getDocs(collection(db, "ea_monitoring_history"));
+historySnapshot.forEach(doc => {
+  const docId = doc.id;  // z. B. "12345678_2025-08-01"
+  const [docAccountId] = docId.split("_"); // extrahiere accountId vor dem "_"
+
+  if (docAccountId !== currentAccountId) return;
+
+  const d = doc.data();
+  const entries = d?.entries || [];
+
+  entries.forEach(item => {
+    if (
+      item.timestamp &&
+      typeof item.equity === "number" &&
+      typeof item.balance === "number" &&
+      typeof item.drawdown === "number"
+    ) {
+      dataList.push(item);
+    }
   });
+ 
+});
 
   // 2. Aktuelle Daten aus `ea_monitoring` hinzufügen
   console.log("🔍 Ergänze aktuelle Daten aus 'ea_monitoring'...");
