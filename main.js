@@ -293,102 +293,105 @@ if (includeArchive) {
     return max + Math.abs(max * paddingFactor);
   }
 
+ // ➤ Drawdown-Werte auf ≥ 0 begrenzen
+const filteredDrawdown = drawdown.map(d => (d >= 0 ? d : 0));
+ 
  if (portfolioChart) {
   portfolioChart.destroy();
  }
  portfolioChart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          type: "line",
-          label: "Equity",
-          data: equity,
-          borderColor: "rgb(75, 192, 192)",
-          tension: 0.1,
-          yAxisID: "y"
-        },
-        {
-          type: "line",
-          label: "Balance",
-          data: balance,
-          borderColor: "rgb(192, 75, 192)",
-          tension: 0.1,
-          yAxisID: "y"
-        },
-        {
-          type: "bar",
-          label: "Drawdown (%)",
-          data: drawdown,
-          backgroundColor: "rgba(255, 99, 132, 0.5)",
-          borderColor: "rgb(255, 99, 132)",
-          yAxisID: "y1"
-        }
-      ]
+  type: "bar",
+  data: {
+    labels: labels,
+    datasets: [
+      {
+        type: "line",
+        label: "Equity",
+        data: equity,
+        borderColor: "rgb(75, 192, 192)",
+        tension: 0.1,
+        yAxisID: "y"
+      },
+      {
+        type: "line",
+        label: "Balance",
+        data: balance,
+        borderColor: "rgb(192, 75, 192)",
+        tension: 0.1,
+        yAxisID: "y"
+      },
+      {
+        type: "bar",
+        label: "Drawdown (%)",
+        data: filteredDrawdown,
+        backgroundColor: "rgba(255, 99, 132, 0.5)",
+        borderColor: "rgb(255, 99, 132)",
+        yAxisID: "y1"
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      title: {
+        display: true,
+        text: "Equity, Balance & Drawdown"
+      },
+      legend: {
+        position: "top"
+      }
     },
-    options: {
-      responsive: true,
-      plugins: {
+    scales: {
+      x: {
+        type: xScaleType,
         title: {
           display: true,
-          text: "Equity, Balance & Drawdown"
+          text: xTitle
         },
-        legend: {
-          position: "top"
-        }
-      },
-      scales: {
-        x: {
-          type: xScaleType,
-          title: {
-            display: true,
-            text: xTitle
-          },
-          ticks: {
-            stepSize: useTimeAxis ? undefined : 1
-          },
-          time: useTimeAxis
-            ? {
-                tooltipFormat: "dd.MM.yyyy HH:mm",
-                displayFormats: {
-                 millisecond: "HH:mm",
-                 second: "HH:mm",
-                 minute: "HH:mm",
-                  hour: "HH:mm",
-                  day: "dd.MM"
-                }
+        ticks: {
+          stepSize: useTimeAxis ? undefined : 1
+        },
+        time: useTimeAxis
+          ? {
+              tooltipFormat: "dd.MM.yyyy HH:mm",
+              displayFormats: {
+                millisecond: "HH:mm",
+                second: "HH:mm",
+                minute: "HH:mm",
+                hour: "HH:mm",
+                day: "dd.MM"
               }
-            : undefined
+            }
+          : undefined
+      },
+      y: {
+        type: "linear",
+        position: "left",
+        title: {
+          display: true,
+          text: "Kontostand"
         },
-        y: {
-          type: "linear",
-          position: "left",
-          title: {
-            display: true,
-            text: "Kontostand"
-          },
-          beginAtZero: false,
-          min: getMinWithPadding([...equity, ...balance]),
-          max: getMaxWithPadding([...equity, ...balance])
+        beginAtZero: false,
+        min: getMinWithPadding([...equity, ...balance]),
+        max: getMaxWithPadding([...equity, ...balance])
+      },
+      y1: {
+        type: "linear",
+        position: "right",
+        grid: {
+          drawOnChartArea: false
         },
-        y1: {
-          type: "linear",
-          position: "right",
-          grid: {
-            drawOnChartArea: false
-          },
-          title: {
-            display: true,
-            text: "Drawdown (%)"
-          },
-          beginAtZero: true,
-          min: getMinWithPadding(drawdown),
-          max: getMaxWithPadding(drawdown)
-        }
+        title: {
+          display: true,
+          text: "Drawdown (%)"
+        },
+        beginAtZero: true,
+        min: 0,
+        max: 0.5  // entspricht 50 %
       }
     }
-  });
+  }
+});
 
   updateMonitoringStats(equity, balance, drawdown);
 }
