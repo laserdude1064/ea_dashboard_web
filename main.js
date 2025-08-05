@@ -593,32 +593,36 @@ const eaEntries = Object.entries(latestByComment);
     // Neue Sektion erkannt → collapsible starten
 if (field.startsWith("__")) {
   const sectionTitle = field.slice(2);
+  const sectionClass = `section-${sectionTitle.replace(/\s+/g, "-")}`;
 
-  // Neues tbody für diese Sektion
-  const sectionBody = document.createElement("tbody");
-  sectionBody.style.visibility = "collapse";
-  sectionBody.classList.add("collapsible-section");
+  // Toggle-Zeile mit Titel
+  const toggleRow = document.createElement("tr");
+  toggleRow.classList.add("collapsible-toggle");
+  toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">▶ ${sectionTitle}</td>`;
 
-  // Überschriftszeile mit Klickfunktion
-   const toggleRow = document.createElement("tr");
-   toggleRow.classList.add("collapsible-toggle");
-   toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">▶ ${sectionTitle}</td>`;
-
-  // 👉 Toggle-Handler mit closure auf sectionBody
+  // Toggle-Handler
   toggleRow.addEventListener("click", () => {
-    const isVisible = sectionBody.style.display === "table-row-group";
-    sectionBody.style.visibility = isVisible ? "collapse" : "visible";
+    const rows = tableBody.querySelectorAll(`.${sectionClass}`);
+    const isVisible = rows.length && rows[0].style.display !== "none";
+    rows.forEach(row => {
+      row.style.display = isVisible ? "none" : "table-row";
+    });
     toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">${isVisible ? "▶" : "▼"} ${sectionTitle}</td>`;
   });
 
-  // in Tabelle einfügen
   tableBody.appendChild(toggleRow);
-  tableBody.appendChild(sectionBody);
-  currentSectionBody = sectionBody; // weiter unten in der Schleife genutzt
+  currentSectionBody = sectionClass;
   return;
-}  
+}
     // Zeile rendern
     const row = document.createElement("tr");
+
+  // wenn eine Sektion aktiv ist, zuordnen und standardmäßig verstecken
+  if (currentSectionBody) {
+    row.classList.add(currentSectionBody);
+    row.style.display = "none";
+  }
+   
     row.innerHTML = `<td><strong>${field}</strong></td>`;
   
     eaEntries.forEach(([name, eaData]) => {
