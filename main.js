@@ -387,7 +387,7 @@ const filteredDrawdown = drawdown.map(d => (d >= 0 ? d : 0));
         },
         beginAtZero: true,
         min: 0,
-        max: 0.5  // entspricht 50 %
+        max: 50  // entspricht 50 %
       }
     }
   }
