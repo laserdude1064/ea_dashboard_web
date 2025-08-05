@@ -13,46 +13,47 @@ const accountNames = {
 };
  
 document.addEventListener("DOMContentLoaded", () => {
-  // Firebase Setup
-  const firebaseConfig = {
-    apiKey: "AIzaSyC1cqUCWwACeFYFFZ7MyIOweamKZ8PnNKU",
-    authDomain: "ea-dashboard-636cf.firebaseapp.com",
-    projectId: "ea-dashboard-636cf",
-    storageBucket: "ea-dashboard-636cf.appspot.com",
-    messagingSenderId: "602990579998",
-    appId: "1:602990579998:web:c6775bcae19a8afba5b90f"
-  };
-
-  const app = initializeApp(firebaseConfig); 
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-
-  // UI Elemente
-  const loginForm = document.getElementById("login-form");
-  const loginSection = document.getElementById("login-section");
-  const contentSection = document.getElementById("content-section");
-  const logoutButton = document.getElementById("logout-button");
-  const accountSelect = document.getElementById("account-select");
-  let currentAccountId = null;
-  let selectedAccountId = null;
-  let accountListenerSet = false;
-  let portfolioChart = null;
-  let tradeChart = null;
  
-  const statsMonitoringBody = document.querySelector("#stats-monitoring tbody");
-  const statsTradesBody = document.querySelector("#stats-trades tbody");
+// Firebase Setup
+const firebaseConfig = {
+  apiKey: "AIzaSyC1cqUCWwACeFYFFZ7MyIOweamKZ8PnNKU",
+  authDomain: "ea-dashboard-636cf.firebaseapp.com",
+  projectId: "ea-dashboard-636cf",
+  storageBucket: "ea-dashboard-636cf.appspot.com",
+  messagingSenderId: "602990579998",
+  appId: "1:602990579998:web:c6775bcae19a8afba5b90f"
+};
 
-  // Tab-Umschaltung
+const app = initializeApp(firebaseConfig); 
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// UI Elemente
+const loginForm = document.getElementById("login-form");
+const loginSection = document.getElementById("login-section");
+const contentSection = document.getElementById("content-section");
+const logoutButton = document.getElementById("logout-button");
+const accountSelect = document.getElementById("account-select");
+let currentAccountId = null;
+let selectedAccountId = null;
+let accountListenerSet = false;
+let portfolioChart = null;
+let tradeChart = null;
+
+const statsMonitoringBody = document.querySelector("#stats-monitoring tbody");
+const statsTradesBody = document.querySelector("#stats-trades tbody");
+
+// Tab-Umschaltung
 const tab1Btn = document.getElementById("tab1-btn");
 const tab2Btn = document.getElementById("tab2-btn");
 const tab3Btn = document.getElementById("tab3-btn"); 
 const tab4Btn = document.getElementById("tab4-btn");
- 
+
 const tab1Content = document.getElementById("tab1");
 const tab2Content = document.getElementById("tab2");
 const tab3Content = document.getElementById("tab3"); 
 const tab4Content = document.getElementById("tab4");
- 
+
 function showTab(tabNumber) {
   const tabs = [tab1Content, tab2Content, tab3Content, tab4Content]; 
   const buttons = [tab1Btn, tab2Btn, tab3Btn, tab4Btn];          
@@ -75,183 +76,172 @@ tab2Btn.addEventListener("click", () => showTab(2));
 tab3Btn.addEventListener("click", () => showTab(3));
 tab4Btn.addEventListener("click", () => showTab(4));
 
-  // Login / Logout
-  if (loginForm) {
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = loginForm.email.value;
-      const password = loginForm.password.value;
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        loginForm.reset();
-      } catch (error) {
-        alert("Login fehlgeschlagen: " + error.message);
-      }
-    });
-  }
-
-  if (logoutButton) {
-    logoutButton.addEventListener("click", () => {
-      signOut(auth);
-    });
-  }
-
-  // Auth State beobachten 
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    loginSection.style.display = "none";
-    contentSection.style.display = "block";
-    showTab(3);
-
-    await loadAvailableAccounts(); // setzt accountSelect Optionen
-    currentAccountId = accountSelect.value;
-
-    if (!accountListenerSet) {
-      accountSelect.addEventListener("change", () => {
-        currentAccountId = accountSelect.value;
-        fetchData();
-        fetchTradeHistory();
-        loadMultiEAStatusTable();
-        loadEAParameters();
-        loadEAMessages();
-      });
-      accountListenerSet = true;
-    }
-
-    fetchData();
-    fetchTradeHistory();
-    loadMultiEAStatusTable();
-    watchMultiEAStatusTable();
-    loadEAParameters();
-    loadEAMessages();
-  } else {
-    loginSection.style.display = "block";
-    contentSection.style.display = "none";
-  }
-});
-
-  // Login Funktion für HTML-Zugriff (wird derzeit nicht genutzt)
-  window.login = async function () {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
+// Login / Logout
+if (loginForm) {
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = loginForm.email.value;
+    const password = loginForm.password.value;
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      loginForm.reset();
     } catch (error) {
-      document.getElementById("login-error").textContent = "❌ Login fehlgeschlagen: " + error.message;
+      alert("Login fehlgeschlagen: " + error.message);
     }
-  };
+  });
+}
 
-  async function loadAvailableAccounts() {
-   const snapshot = await getDocs(collection(db, "ea_monitoring"));
-   const accounts = new Set();
- 
-   snapshot.forEach(doc => {
-    const accountId = doc.id;            // Doc-ID ist Account-ID
-    accounts.add(accountId);
-   });
- 
-   accountSelect.innerHTML = ""; // Reset
-   Array.from(accounts).sort().forEach(acc => {
-     const option = document.createElement("option");
-     option.value = acc;
-     option.textContent = accountNames[acc] || acc; // Mapping oder ID anzeigen
-     accountSelect.appendChild(option);
-   });
- 
-   // Setze ersten Account als aktiv
-   if (accounts.size > 0) {
-     currentAccountId = accountSelect.value;
+if (logoutButton) {
+  logoutButton.addEventListener("click", () => {
+    signOut(auth);
+  });
+}
+
+ // Auth State beobachten 
+onAuthStateChanged(auth, async (user) => {
+ if (user) {
+   loginSection.style.display = "none";
+   contentSection.style.display = "block";
+   showTab(3);
+
+   await loadAvailableAccounts(); // setzt accountSelect Optionen
+   currentAccountId = accountSelect.value;
+
+   if (!accountListenerSet) {
+     accountSelect.addEventListener("change", () => {
+       currentAccountId = accountSelect.value;
+       fetchData();
+       fetchTradeHistory();
+       loadMultiEAStatusTable();
+       loadEAParameters();
+       loadEAMessages();
+     });
+     accountListenerSet = true;
    }
+
+   fetchData();
+   fetchTradeHistory();
+   loadMultiEAStatusTable();
+   watchMultiEAStatusTable();
+   loadEAParameters();
+   loadEAMessages();
+ } else {
+   loginSection.style.display = "block";
+   contentSection.style.display = "none";
  }
- 
+});
+
+// Login Funktion für HTML-Zugriff (wird derzeit nicht genutzt)
+window.login = async function () {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (error) {
+    document.getElementById("login-error").textContent = "❌ Login fehlgeschlagen: " + error.message;
+  }
+};
+
+async function loadAvailableAccounts() {
+ const snapshot = await getDocs(collection(db, "ea_monitoring"));
+ const accounts = new Set();
+
+ snapshot.forEach(doc => {
+  const accountId = doc.id;            // Doc-ID ist Account-ID
+  accounts.add(accountId);
+ });
+
+ accountSelect.innerHTML = ""; // Reset
+ Array.from(accounts).sort().forEach(acc => {
+   const option = document.createElement("option");
+   option.value = acc;
+   option.textContent = accountNames[acc] || acc; // Mapping oder ID anzeigen
+   accountSelect.appendChild(option);
+ });
+
+ // Setze ersten Account als aktiv
+ if (accounts.size > 0) {
+   currentAccountId = accountSelect.value;
+ }
+} 
 
   // ========================================================================================================================== Monitoring-Daten laden ============ 
 
-  function updateMonitoringStats(equity, balance, drawdown) {
-    const lastEquity = equity.at(-1) || 0;
-    const firstEquity = equity[0] || 0;
-    const lastBalance = balance.at(-1) || 0;
-    const firstBalance = balance[0] || 0;
-    const profit = lastEquity - firstEquity;
-    const growth = ((lastBalance - firstBalance) / firstBalance) * 100;
-    const maxDD = Math.max(...drawdown);
-    const maxDDAbs = (maxDD / 100) * lastEquity;
-    const recovery = maxDDAbs > 0 ? profit / maxDDAbs : "–";
-    const returns = equity.slice(1).map((e, i) => e - equity[i]);
-    const avg = returns.reduce((a, b) => a + b, 0) / returns.length;
-    const stdDev = Math.sqrt(returns.map(r => (r - avg) ** 2).reduce((a, b) => a + b, 0) / returns.length);
-    const sharpe = stdDev > 0 ? avg / stdDev : "–";
-    const gains = returns.filter(r => r > 0).reduce((a, b) => a + b, 0);
-    const losses = returns.filter(r => r < 0).reduce((a, b) => a + b, 0);
-    const profitFactor = losses < 0 ? gains / Math.abs(losses) : "–";
+function updateMonitoringStats(equity, balance, drawdown) {
+  const lastEquity = equity.at(-1) || 0;
+  const firstEquity = equity[0] || 0;
+  const lastBalance = balance.at(-1) || 0;
+  const firstBalance = balance[0] || 0;
+  const profit = lastEquity - firstEquity;
+  const growth = ((lastBalance - firstBalance) / firstBalance) * 100;
+  const maxDD = Math.max(...drawdown);
+  const maxDDAbs = (maxDD / 100) * lastEquity;
+  const recovery = maxDDAbs > 0 ? profit / maxDDAbs : "–";
+  const returns = equity.slice(1).map((e, i) => e - equity[i]);
+  const avg = returns.reduce((a, b) => a + b, 0) / returns.length;
+  const stdDev = Math.sqrt(returns.map(r => (r - avg) ** 2).reduce((a, b) => a + b, 0) / returns.length);
+  const sharpe = stdDev > 0 ? avg / stdDev : "–";
+  const gains = returns.filter(r => r > 0).reduce((a, b) => a + b, 0);
+  const losses = returns.filter(r => r < 0).reduce((a, b) => a + b, 0);
+  const profitFactor = losses < 0 ? gains / Math.abs(losses) : "–";
 
-    const stats = [
-      ["Aktuelle Balance", `${lastBalance.toFixed(2)} €`],
-      ["Balance-Wachstum", `${growth.toFixed(2)} %`],
-      ["Aktuelle Equity", `${lastEquity.toFixed(2)} €`],
-      ["Gewinn seit Start", `${profit.toFixed(2)} €`],
-      ["Maximaler Drawdown (%)", `${maxDD.toFixed(2)} %`],
-      ["Maximaler Drawdown (absolut)", `${maxDDAbs.toFixed(2)} €`],
-      ["Recovery Factor", typeof recovery === "number" ? recovery.toFixed(2) : recovery],
-      ["Sharpe Ratio", typeof sharpe === "number" ? sharpe.toFixed(2) : sharpe],
-      ["Profit Factor", typeof profitFactor === "number" ? profitFactor.toFixed(2) : profitFactor]
-    ];
+  const stats = [
+    ["Aktuelle Balance", `${lastBalance.toFixed(2)} €`],
+    ["Balance-Wachstum", `${growth.toFixed(2)} %`],
+    ["Aktuelle Equity", `${lastEquity.toFixed(2)} €`],
+    ["Gewinn seit Start", `${profit.toFixed(2)} €`],
+    ["Maximaler Drawdown (%)", `${maxDD.toFixed(2)} %`],
+    ["Maximaler Drawdown (absolut)", `${maxDDAbs.toFixed(2)} €`],
+    ["Recovery Factor", typeof recovery === "number" ? recovery.toFixed(2) : recovery],
+    ["Sharpe Ratio", typeof sharpe === "number" ? sharpe.toFixed(2) : sharpe],
+    ["Profit Factor", typeof profitFactor === "number" ? profitFactor.toFixed(2) : profitFactor]
+  ];
 
-    statsMonitoringBody.innerHTML = "";
-    for (const [label, value] of stats) {
-      const row = document.createElement("tr");
-      row.innerHTML = `<td>${label}</td><td style="text-align:right">${value}</td>`;
-      statsMonitoringBody.appendChild(row);
-    }
+  statsMonitoringBody.innerHTML = "";
+  for (const [label, value] of stats) {
+    const row = document.createElement("tr");
+    row.innerHTML = `<td>${label}</td><td style="text-align:right">${value}</td>`;
+    statsMonitoringBody.appendChild(row);
   }
+}
 
   // ========================================================================================================== Trade-Daten laden ============
 async function fetchData() {
-  console.log("🔍 Lade Daten aus 'ea_monitoring_history' für Account:", currentAccountId);
   const dataList = [];
- 
   if (!currentAccountId) {
     console.warn("⚠️ Kein Account ausgewählt – Abbruch.");
     return;
   }
- 
-// 1. Daten aus `ea_monitoring_history` holen (alle Dokumente)
- const includeArchive = document.getElementById("toggle-archive-data")?.checked ?? true;
 
-if (includeArchive) {
-  const historySnapshot = await getDocs(collection(db, "ea_monitoring_history"));
-  historySnapshot.forEach(doc => {
-    const docId = doc.id;  // z. B. "12345678_2025-08-01"
-    const [docAccountId] = docId.split("_"); // extrahiere accountId vor dem "_"
-  
-    if (docAccountId !== currentAccountId) return;
-  
-    const d = doc.data();
-    const entries = d?.entries || [];
-  
-    entries.forEach(item => {
-      if (
-        item.timestamp &&
-        typeof item.equity === "number" &&
-        typeof item.balance === "number" &&
-        typeof item.drawdown === "number"
-      ) {
-        dataList.push(item);
-      }
+  const includeArchive = document.getElementById("toggle-archive-data")?.checked ?? true;
+  if (includeArchive) {
+    console.log("🔍 Lade Daten aus 'ea_monitoring_history' für Account:", currentAccountId);
+    const historySnapshot = await getDocs(collection(db, "ea_monitoring_history"));
+    historySnapshot.forEach(doc => {
+      const [docAccountId] = doc.id.split("_");
+      if (docAccountId !== currentAccountId) return;
+      const d = doc.data();
+      const entries = d?.entries || [];
+      entries.forEach(item => {
+        if (
+          item.timestamp &&
+          typeof item.equity === "number" &&
+          typeof item.balance === "number" &&
+          typeof item.drawdown === "number"
+        ) {
+          dataList.push(item);
+        }
+      });
     });
-   
-  });
- }
-  // 2. Aktuelle Daten aus `ea_monitoring` hinzufügen
-  console.log("🔍 Ergänze aktuelle Daten aus 'ea_monitoring'...");
+  }
+
+  console.log("🔍 Lade aktuelle Daten aus 'ea_monitoring'...");
   const docRef = doc(db, "ea_monitoring", currentAccountId);
   const docSnap = await getDoc(docRef);
-
   if (docSnap.exists()) {
     const d = docSnap.data();
     const entries = d?.entries || [];
-
     entries.forEach(item => {
       if (
         item.timestamp &&
@@ -267,7 +257,6 @@ if (includeArchive) {
   }
 
   dataList.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
-
   const equity = dataList.map(d => d.equity);
   const balance = dataList.map(d => d.balance);
   const drawdown = dataList.map(d => d.drawdown);
@@ -275,14 +264,12 @@ if (includeArchive) {
   const indexLabels = equity.map((_, i) => i);
 
   const useTimeAxis = document.getElementById("toggle-time-axis-live")?.checked ?? false;
-
   const labels = useTimeAxis ? timestamps : indexLabels;
   const xScaleType = useTimeAxis ? "time" : "linear";
   const xTitle = useTimeAxis ? "Zeit" : "Index";
 
   const ctx = document.getElementById("chart").getContext("2d");
 
-  // Hilfsfunktionen
   function getMinWithPadding(data, paddingFactor = 0.0001) {
     const min = Math.min(...data);
     return min - Math.abs(min * paddingFactor);
@@ -293,125 +280,81 @@ if (includeArchive) {
     return max + Math.abs(max * paddingFactor);
   }
 
- // ➤ Drawdown-Werte auf ≥ 0 begrenzen
-const filteredDrawdown = drawdown.map(d => (d >= 0 ? d : 0));
- 
- if (portfolioChart) {
-  portfolioChart.destroy();
- }
-portfolioChart = new Chart(ctx, {
-  type: "bar",
-  data: {
-    labels: labels,
-    datasets: [
-      {
-        type: "line",
-        label: "Equity",
-        data: equity,
-        borderColor: "rgb(75, 192, 192)",
-        tension: 0.1,
-        yAxisID: "y"
-      },
-      {
-        type: "line",
-        label: "Balance",
-        data: balance,
-        borderColor: "rgb(192, 75, 192)",
-        tension: 0.1,
-        yAxisID: "y"
-      },
-      {
-        type: "bar",
-        label: "Drawdown (%)",
-        data: filteredDrawdown,
-        backgroundColor: "rgba(255, 99, 132, 0.5)",
-        borderColor: "rgb(255, 99, 132)",
-        yAxisID: "y1"
-      }
-    ]
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      title: {
-        display: true,
-        text: "Equity, Balance & Drawdown"
-      },
-      legend: {
-        position: "top"
-      }
+  const filteredDrawdown = drawdown.map(d => (d >= 0 ? d : 0));
+
+  if (portfolioChart) portfolioChart.destroy();
+  portfolioChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { type: "line", label: "Equity", data: equity, borderColor: "rgb(75, 192, 192)", tension: 0.1, yAxisID: "y" },
+        { type: "line", label: "Balance", data: balance, borderColor: "rgb(192, 75, 192)", tension: 0.1, yAxisID: "y" },
+        { type: "bar", label: "Drawdown (%)", data: filteredDrawdown, backgroundColor: "rgba(255, 99, 132, 0.5)", borderColor: "rgb(255, 99, 132)", yAxisID: "y1" }
+      ]
     },
-    scales: {
-      x: {
-        type: xScaleType,
-        title: {
-          display: true,
-          text: xTitle
-        },
-        ticks: useTimeAxis
-          ? {
-              autoSkip: false,
-              source: "data",
-              callback: function (value, index, ticks) {
-                const ts = this.getLabelForValue(value);
-                const date = new Date(ts);
-                const minutes = date.getMinutes();
-                if (minutes === 0 || minutes === 30) {
-                  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                }
-                return "";
-              }
-            }
-          : {
-              stepSize: 1
-            },
-        time: useTimeAxis
-          ? {
-              tooltipFormat: "dd.MM.yyyy HH:mm",
-              displayFormats: {
-                millisecond: "HH:mm",
-                second: "HH:mm",
-                minute: "HH:mm",
-                hour: "HH:mm",
-                day: "dd.MM"
-              },
-              unit: "minute",
-              stepSize: 1
-            }
-          : undefined
-       },
-      y: {
-        type: "linear",
-        position: "left",
-        title: {
-          display: true,
-          text: "Kontostand"
-        },
-        beginAtZero: false,
-        min: getMinWithPadding([...equity, ...balance]),
-        max: getMaxWithPadding([...equity, ...balance])
+    options: {
+      responsive: true,
+      plugins: {
+        title: { display: true, text: "Equity, Balance & Drawdown" },
+        legend: { position: "top" }
       },
-      y1: {
-        type: "linear",
-        position: "right",
-        grid: {
-          drawOnChartArea: false
+      scales: {
+        x: {
+          type: xScaleType,
+          title: { display: true, text: xTitle },
+          ticks: useTimeAxis
+            ? {
+                autoSkip: false,
+                source: "data",
+                callback: function (value) {
+                  const ts = this.getLabelForValue(value);
+                  const date = new Date(ts);
+                  const minutes = date.getMinutes();
+                  return (minutes === 0 || minutes === 30)
+                    ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : "";
+                }
+              }
+            : { stepSize: 1 },
+          time: useTimeAxis
+            ? {
+                tooltipFormat: "dd.MM.yyyy HH:mm",
+                displayFormats: {
+                  millisecond: "HH:mm",
+                  second: "HH:mm",
+                  minute: "HH:mm",
+                  hour: "HH:mm",
+                  day: "dd.MM"
+                },
+                unit: "minute",
+                stepSize: 1
+              }
+            : undefined
         },
-        title: {
-          display: true,
-          text: "Drawdown (%)"
+        y: {
+          type: "linear",
+          position: "left",
+          title: { display: true, text: "Kontostand" },
+          beginAtZero: false,
+          min: getMinWithPadding([...equity, ...balance]),
+          max: getMaxWithPadding([...equity, ...balance])
         },
-        beginAtZero: true,
-        min: 0,
-        max: 50  // entspricht 50 %
+        y1: {
+          type: "linear",
+          position: "right",
+          grid: { drawOnChartArea: false },
+          title: { display: true, text: "Drawdown (%)" },
+          beginAtZero: true,
+          min: 0,
+          max: 50
+        }
       }
     }
-  }
-});
-
-
+  });
   updateMonitoringStats(equity, balance, drawdown);
 }
+
 document.getElementById("toggle-time-axis-live")?.addEventListener("change", async () => {
   await fetchData();  // ruft den Chart mit neuer Achsen-Option neu auf
 });
