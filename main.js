@@ -217,29 +217,32 @@ async function fetchData() {
   }
  
 // 1. Daten aus `ea_monitoring_history` holen (alle Dokumente)
-const historySnapshot = await getDocs(collection(db, "ea_monitoring_history"));
-historySnapshot.forEach(doc => {
-  const docId = doc.id;  // z. B. "12345678_2025-08-01"
-  const [docAccountId] = docId.split("_"); // extrahiere accountId vor dem "_"
+ const includeArchive = document.getElementById("toggle-archive-data")?.checked ?? true;
 
-  if (docAccountId !== currentAccountId) return;
-
-  const d = doc.data();
-  const entries = d?.entries || [];
-
-  entries.forEach(item => {
-    if (
-      item.timestamp &&
-      typeof item.equity === "number" &&
-      typeof item.balance === "number" &&
-      typeof item.drawdown === "number"
-    ) {
-      dataList.push(item);
-    }
+if (includeArchive) {
+  const historySnapshot = await getDocs(collection(db, "ea_monitoring_history"));
+  historySnapshot.forEach(doc => {
+    const docId = doc.id;  // z. B. "12345678_2025-08-01"
+    const [docAccountId] = docId.split("_"); // extrahiere accountId vor dem "_"
+  
+    if (docAccountId !== currentAccountId) return;
+  
+    const d = doc.data();
+    const entries = d?.entries || [];
+  
+    entries.forEach(item => {
+      if (
+        item.timestamp &&
+        typeof item.equity === "number" &&
+        typeof item.balance === "number" &&
+        typeof item.drawdown === "number"
+      ) {
+        dataList.push(item);
+      }
+    });
+   
   });
- 
-});
-
+ }
   // 2. Aktuelle Daten aus `ea_monitoring` hinzufügen
   console.log("🔍 Ergänze aktuelle Daten aus 'ea_monitoring'...");
   const docRef = doc(db, "ea_monitoring", currentAccountId);
@@ -379,7 +382,7 @@ historySnapshot.forEach(doc => {
             display: true,
             text: "Drawdown (%)"
           },
-          beginAtZero: false,
+          beginAtZero: true,
           min: getMinWithPadding(drawdown),
           max: getMaxWithPadding(drawdown)
         }
@@ -389,9 +392,14 @@ historySnapshot.forEach(doc => {
 
   updateMonitoringStats(equity, balance, drawdown);
 }
-document.getElementById("toggle-time-axis-live").addEventListener("change", async () => {
+document.getElementById("toggle-time-axis-live")?.addEventListener("change", async () => {
   await fetchData();  // ruft den Chart mit neuer Achsen-Option neu auf
 });
+
+document.getElementById("toggle-archive-data")?.addEventListener("change", async () => {
+  await fetchData();
+});
+
  //================================================================================================================================= HISTORISCHE TRADE DATEN LADEN
 async function fetchTradeHistory() {
   if (!currentAccountId) {
