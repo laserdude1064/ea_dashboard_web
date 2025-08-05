@@ -544,7 +544,7 @@ function renderMultiEAStatusTable(dataList) {
 
 const eaEntries = Object.entries(latestByComment);
  eaEntries.sort((a, b) => {
-   const commentA = a[0], const commentB = b[0]; 
+   const commentA = a[0], commentB = b[0]; 
    const endsWith = (str, suffix) => str.endsWith(suffix) ? 1 : 0; 
    const aMR = endsWith(commentA, "MR");     // MR-EAs sollen zuerst, dann TF, dann der Rest
    const bMR = endsWith(commentB, "MR");
