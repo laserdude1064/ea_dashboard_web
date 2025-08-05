@@ -625,9 +625,7 @@ if (field.startsWith("__")) {
 
   currentSectionBody = sectionBody; // weiter unten in der Schleife genutzt
   return;
-}
-
-  
+}  
     // Zeile rendern
     const row = document.createElement("tr");
     row.innerHTML = `<td><strong>${field}</strong></td>`;
@@ -668,7 +666,6 @@ if (field.startsWith("__")) {
       tableBody.appendChild(row);          // normaler Block
     }
 });
-
 
 }
 
