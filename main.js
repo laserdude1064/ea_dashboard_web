@@ -379,7 +379,6 @@ async function fetchTradeHistory() {
 
   snapshot.forEach(doc => {
     const d = doc.data();
-
      // Prüfe Account-ID und ob "deals" Array vorhanden ist
      if (d.account_id === currentAccountId && Array.isArray(d.deals)) {
        // Alle Trades des Tages durchgehen
@@ -393,7 +392,6 @@ async function fetchTradeHistory() {
        });
      }
    });
-
 
   // Nachträglich Kommentare ergänzen, falls nötig
   tradeList.forEach(t => {
@@ -411,413 +409,20 @@ async function fetchTradeHistory() {
   let selectedRange = [defaultStart, defaultEnd];
 
   flatpickr(rangeInput, {
-    mode: "range",
-    dateFormat: "Y-m-d",
-    defaultDate: selectedRange,
-    locale: "de",
+    mode: "range", dateFormat: "Y-m-d", defaultDate: selectedRange, locale: "de",
     onChange: (dates) => {
       if (dates.length === 2) {
         renderChartForRange(dates[0], dates[1]);
       }
     }
   });
-
   renderChartForRange(defaultStart, defaultEnd);
 }
-//================================================================================================================================================== EA STATUS DATEN LADEN
-function renderMultiEAStatusTable(dataList) {
-  const openSections = new Set();
-  document.querySelectorAll(".collapsible-toggle").forEach(toggleRow => {
-    const text = toggleRow.textContent;
-    if (text.startsWith("▼")) {
-      const sectionTitle = text.replace(/^▼\s*/, "").trim();
-      openSections.add(sectionTitle);
-    }
-  });
  
-  const tableBody = document.querySelector("#payload-table-body");
-  const tableHead = document.querySelector("#payload-table-head");
-  tableBody.innerHTML = "";
-  tableHead.innerHTML = "";
-
-  const fieldOrder = [
-    "symbol", "received_at", "TimeFilterActive", "buy_count", "sell_count", "lotsize", "TPFO", "TP", "SL", "waitmins", "BuyGrid", "SellGrid",
-    "Buy_BB", "Buy_RSI", "Buy_MACD", "Buy_margin",
-    "Buy_maxcount", "Buy_tickmax", "Buy_ATR",
-    "Sell_BB", "Sell_RSI", "Sell_MACD", "Sell_margin",
-    "Sell_maxcount", "Sell_tickmax", "Sell_ATR",
-    "TTPaction", "buyTTP", "sellTTP",
-    "RejectionActiveBuy", "RejectionActiveSell",
-    "AntiGridActiveBuy", "AntiGridActiveSell", "LossLotsActive",
-    "BuyList", "SellList"
-  ];
-  let parameterFieldOrder = [
-  "__basic trading parameters",
-  "lotsize", "LossLotsMultiplicator", "MoneyManagement", "UsedBalance",
-
-  "__time filter parameters",
-  "StopTradingHour", "StopTradingMinute", "StartTradingHour", "StartTradingMinute",
-  "ActivateTimeFilter", "TimeFilterStart1", "TimeFilterOffset1",
-  "TimeFilterStart2", "TimeFilterOffset2",
-  "TimeFilterStart3", "TimeFilterOffset3",
-  "TimeFilterDay1", "TimeFilterDay2",
-
-  "__order parameters",
-  "MaxBuyOrders", "OrderSeries", "OrderSeriesPause",
-  "GridMinDist", "GridMultiplier", "waitminutes",
-  "waitminutesMultiplier", "waitminsnewgrid",
-
-  "__news trading",
-  "ActivateNewsTrading", "usepredefinedevents",
-  "NTminutesbefore", "NTminutesafter", "uniqueEventNamesnumber",
-
-  "__Take Profit parameters",
-  "TakeProfitFirstOrder", "TakeProfitGridOrder", "ActivateDTP",
-  "DTPFirstOrderMultiplier", "DTPGridOrderMultiplier", "DTPbars", "DTPtimeframe",
-  "ActivateTrailingTP", "TrailingTPthresholdFirstOrder", "TrailingTPdistFirstOrder",
-  "TrailingTPthreshold", "TrailingTPdist", "TrailingTPtickDiffThreshold",
-  "swapcorrection", "buyswap", "sellswap", "swapcorrectionhour",
-  "ActivateRejectionTP", "RejectionTP_timeframe", "RejectionRange", "RejectionMax",
-
-  "__Stop Loss parameters",
-  "ActivateStopLoss", "StopLoss", "ActivateAntiGrid",
-  "AntiGridPercentage", "AntiGridLotMultiplicator", "TrailingTPdistAntiGrid",
-  "ActivateStopTime", "closeorders", "closinghours", "CloseOnOppositeSignal",
-
-  "__Bollinger Bands indicator parameters",
-  "ActivateBB", "BB_period", "BB_shift", "BB_deviation",
-  "BB_applied_price", "BB_timeframe",
-
-  "__ATR Grid parameters",
-  "ActivateATRgrid", "atrgrid_period", "atrgrid_timeframe", "ATRGridMultiplier",
-
-  "__ATR Time parameters",
-  "ActivateATRtime", "atrtime_period", "atrtime_timeframe", "ATRwaitminsMultiplier",
-
-  "__ADX indicator parameters",
-  "ActivateADX", "adx_period", "adx_timeframe", "adx_threshold",
-
-  "__RSI indicator parameters",
-  "ActivateRSI", "rsi_period", "rsi_timeframe", "rsi_applied_price", "rsi_deviation",
-
-  "__MACD indicator parameters",
-  "ActivateMACD", "macd_timeframe", "macd_applied_price",
-  "fast_ema_period", "slow_ema_period", "signal_period",
-  "macd_thershold", "ma_period", "ma_timeframe",
-
-  "__Volatility management",
-  "volatilitysleepdays", "ActivateTickMax", "period_SL",
-  "tick_max", "tick_min", "tick_max_order", "tick_Diff_avg_mult", "tick_Diff_bars",
-  "ActivateDoubleBB", "BB2_period", "BB2_deviation", "BB2_applied_price", "BB2_timeframe",
-  "ActivateVolaBB", "BB3_period", "BB3_deviation", "BB3_applied_price", "BB3_timeframe", "BB3diff",
-  "ActivateATRThreshold", "atrTRH_period", "atrTRH_timeframe",
-  "ATRThreshold", "ATRThresholdMax", "ATRThresholdMin", "ATR_avg_mult", "ATRThreshold_bars"
-];
-  if (!currentAccountId) {
-    console.warn("⚠️ Kein Account ausgewählt – Tabelle wird nicht angezeigt.");
-    return;
-  }
+let tradeList = [];
+let useTimeAxis = false;
  
- const latestByComment = {};
- 
-  dataList.forEach(data => {
-    if (data.account_id !== currentAccountId) return;
-    const comment = data.comment || "unbekannt";    
-    if (!(comment in latestByComment)) {
-      latestByComment[comment] = data;
-    }
-  });
-
-const eaEntries = Object.entries(latestByComment);
- eaEntries.sort((a, b) => {
-   const commentA = a[0], commentB = b[0]; 
-   const endsWith = (str, suffix) => str.endsWith(suffix) ? 1 : 0; 
-   const aMR = endsWith(commentA, "MR");     // MR-EAs sollen zuerst, dann TF, dann der Rest
-   const bMR = endsWith(commentB, "MR");
-   if (aMR !== bMR) return bMR - aMR;
- 
-   const aTF = endsWith(commentA, "TF");
-   const bTF = endsWith(commentB, "TF");
-   if (aTF !== bTF) return bTF - aTF;
- 
-   // Wenn beides gleich, dann nach TimeFilterActive
-   const aVal = a[1].TimeFilterActive ? 1 : 0;
-   const bVal = b[1].TimeFilterActive ? 1 : 0;
-   return aVal - bVal;
- });
-
- const eaNames = eaEntries.map(([name]) => name);
- eaEntries.forEach(([name, eaData]) => {         // Parameterdaten ergänzen
-    const params = cachedParametersByComment[name];
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (!(key in eaData)) {
-          eaData[key] = value;  // Parameter an das Statusobjekt anhängen
-        }
-      });
-    }
-  });
-   
-   // Tabellenkopf
-  const headRow = document.createElement("tr");
-  headRow.innerHTML = `<th>Parameter</th>` + eaNames.map(name => `<th>${name}</th>`).join("");
-  tableHead.appendChild(headRow);
-  
-  const allFields = [...fieldOrder, ...parameterFieldOrder];
-  let insertedParameterDivider = false;  
-  let currentSectionBody = null;
-  
-  allFields.forEach(field => {
-    // Trennlinie vor Parameterbereich
-    if (!insertedParameterDivider && !fieldOrder.includes(field)) {
-      const dividerRow = document.createElement("tr");
-      dividerRow.innerHTML = `<td colspan="${eaNames.length + 1}" class="table-divider"></td>`;
-      tableBody.appendChild(dividerRow);
-      insertedParameterDivider = true;
-    }
-  
-    // Neue Sektion erkannt → collapsible starten
-    if (field.startsWith("__")) {
-      const sectionTitle = field.slice(2);
-      const sectionClass = `section-${sectionTitle.replace(/\s+/g, "-")}`;
-    
-      const toggleRow = document.createElement("tr");
-      toggleRow.classList.add("collapsible-toggle");
-      let initiallyOpen = openSections.has(sectionTitle);
-    
-      toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">${initiallyOpen ? "▼" : "▶"} ${sectionTitle}</td>`;
-    
-      toggleRow.addEventListener("click", () => {
-        const rows = tableBody.querySelectorAll(`.${sectionClass}`);
-        const isVisible = rows.length && rows[0].style.display !== "none";
-        rows.forEach(row => {
-          row.style.display = isVisible ? "none" : "table-row";
-        });
-        toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">${isVisible ? "▶" : "▼"} ${sectionTitle}</td>`;
-      });
-    
-      tableBody.appendChild(toggleRow);
-      currentSectionBody = sectionClass;
-    
-      return;
-    }
-    // Zeile rendern
-    const row = document.createElement("tr");
-
-  // wenn eine Sektion aktiv ist, zuordnen und standardmäßig verstecken
-  if (currentSectionBody) {
-    row.classList.add(currentSectionBody);
-    const sectionTitle = currentSectionBody.replace(/^section-/, "").replace(/-/g, " ");
-    if (!openSections.has(sectionTitle)) {
-      row.style.display = "none";
-    }
-  }
-   
-   row.innerHTML = `<td><strong>${field}</strong></td>`;
-  
-  eaEntries.forEach(([name, eaData]) => {
-    let value = "-";
-    const paramData = cachedParametersByComment[name] || {};
-  
-    if (eaData[field] !== undefined) {
-      if (field === "received_at") {
-        const date = new Date(eaData[field]);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMin = diffMs / 1000 / 60;
-  
-        const h = String(date.getHours()).padStart(2, '0');
-        const m = String(date.getMinutes()).padStart(2, '0');
-        const s = String(date.getSeconds()).padStart(2, '0');
-        value = `${h}:${m}:${s}`;
-  
-        row.innerHTML += `<td class="${diffMin > 5 ? 'highlight' : ''}">${value}</td>`;
-        return; // ❌ FEHLER: bricht loop zu früh ab → ❗ entfernt
-      } else {
-        value = formatValue(eaData[field]);
-      }
-    } else if (paramData[field] !== undefined) {
-      value = formatValue(paramData[field]);
-    }
-  
-    row.innerHTML += `<td>${value}</td>`;
-});
-  
-  tableBody.appendChild(row);
-});
-
-}
-
-async function loadMultiEAStatusTable() {
-  const colRef = collection(db, "ea_status");
-  const snapshot = await getDocs(colRef);
-  const dataList = snapshot.docs
-    .map(doc => doc.data())
-    .filter(d => d.account_id === currentAccountId); // 🔧 Nur Daten des aktiven Accounts
-
-  renderMultiEAStatusTable(dataList);
-}
-
-function watchMultiEAStatusTable() {
-  const colRef = collection(db, "ea_status");
-
-  onSnapshot(colRef, snapshot => {
-    const dataList = snapshot.docs
-      .map(doc => doc.data())
-      .filter(d => d.account_id === currentAccountId); // 🔧 Nur Daten des aktiven Accounts
-
-    renderMultiEAStatusTable(dataList);
-  });
-}
-
- 
-let cachedParametersByComment = {};
-async function loadEAParameters() {
-  const colRef = collection(db, "ea_parameters");
-  const snapshot = await getDocs(colRef);
-
-  snapshot.docs.forEach(doc => {
-    const data = doc.data();
-    const comment = data.comment;
-    const timestamp = data.timestamp?.seconds || 0;
-
-    if (!cachedParametersByComment[comment] || cachedParametersByComment[comment].timestamp < timestamp) {
-      cachedParametersByComment[comment] = data;
-    }
-  });
-}
-function extractParameterFieldOrderAndGroups(comment) {
-  const params = cachedParametersByComment[comment];
-  if (!params) return { fieldOrder: [], groupTitles: {} };
-
-  const fieldOrder = [];
-  const groupTitles = {};
-  let currentGroup = null;
-
-  for (const [key, value] of Object.entries(params)) {
-    const groupMatch = key.match(/^parametergruppe\d+$/i);
-    if (groupMatch) {
-      currentGroup = value;
-    } else {
-      if (currentGroup) {
-        groupTitles[key] = currentGroup;
-      }
-      fieldOrder.push(key);
-    }
-  }
-
-  return { fieldOrder, groupTitles };
-} 
-// Optional: Formatierung je nach Typ
-function formatValue(value) {
-  const keyOrder = ["time", "ticket", "volume", "open", "tp", "sl", "swap"];
-
-  if (typeof Timestamp !== "undefined" && value instanceof Timestamp) {
-    return value.toDate().toLocaleString();
-  }
-  if (value === null || value === undefined) return "-";
-  if (Array.isArray(value)) {
-    if (value.length === 0) {
-      return "-";
-    }
-    if (value.length > 0 && typeof value[0] === "object" && value[0] !== null) {
-      // Nach time sortieren (älteste zuerst)
-      value.sort((a, b) => (a.time || 0) - (b.time || 0));
-
-      // Tabellen-Header mit den Keys
-      const headers = keyOrder.map(key => `<th style="padding: 2px 6px; text-align: left;">${key}</th>`).join("");
-
-      // Eine Zeile pro Objekt mit den Werten
-      const rows = value.map(obj => {
-        const cells = keyOrder.map(key => {
-          let val = obj[key];
-
-          // Zeit umwandeln
-          if (key === "time" && typeof val === "number") {
-            val = new Date(val * 1000).toLocaleString();
-          }
-
-          // Boolean in Emoji
-          if (typeof val === "boolean") {
-            val = val ? "✅" : "❌";
-          }
-
-          return `<td style="padding: 2px 6px;">${val !== undefined ? val : ""}</td>`;
-        }).join("");
-        return `<tr>${cells}</tr>`;
-      }).join("");
-
-      // Komplettes Table innerhalb von <details>
-      return `
-      <button onclick='openModal(\`${generateTableHTML(value)}\`)' style="font-size:0.8em; cursor:pointer;">🗂️ Details anzeigen</button>
-      `;
-    }
-
-    // Arrays von Arrays oder einfachen Werten
-    return value.map(row => {
-      if (Array.isArray(row)) {
-        return "[" + row.map(v => String(v)).join(", ") + "]";
-      }
-      if (typeof row === "boolean") {
-        return row ? "✅" : "❌";
-      }
-      return String(row);
-    }).join("<br>");
-  }
-
-  // Einzelne Objekte
-  if (typeof value === "object" && value !== null) {
-    return JSON.stringify(value);
-  }
-
-  // Einzelner Boolean
-  if (typeof value === "boolean") {
-    return value ? "✅" : "❌";
-  }
-
-  return String(value);
-}
-  function generateTableHTML(value) {
-   const keyOrder = ["time", "ticket", "volume", "open", "tp", "sl", "swap"];
- 
-   value.sort((a, b) => (a.time || 0) - (b.time || 0));
-   const headers = keyOrder.map(key => `<th style="padding: 2px 6px; text-align: left;">${key}</th>`).join("");
- 
-   const rows = value.map(obj => {
-     const cells = keyOrder.map(key => {
-       let val = obj[key];
-       if (key === "time" && typeof val === "number") val = new Date(val * 1000).toLocaleString();
-       if (typeof val === "boolean") val = val ? "✅" : "❌";
-       return `<td style="padding: 2px 6px;">${val !== undefined ? val : ""}</td>`;
-     }).join("");
-     return `<tr>${cells}</tr>`;
-   }).join("");
- 
-   return `
-     <table style="border-collapse: collapse; font-size: 0.85em; margin-top: 4px;">
-       <thead><tr>${headers}</tr></thead>
-       <tbody>${rows}</tbody>
-     </table>`;
- }
-   function openModal(contentHtml) {
-    const overlay = document.getElementById("modal-overlay");
-    const body = document.getElementById("modal-body");
-    body.innerHTML = contentHtml;
-    overlay.style.display = "block";
-  }
-  
-  function closeModal() {
-    document.getElementById("modal-overlay").style.display = "none";
-  }
-   // Wichtig: Funktionen global machen
-  window.openModal = openModal;
-  window.closeModal = closeModal;
-
- 
-  let tradeList = [];
-  let useTimeAxis = false;
- 
- function renderChartForRange(startDate, endDate) {
+function renderChartForRange(startDate, endDate) {
   const eaLegendContainer = document.getElementById("ea-legend");
   if (!eaLegendContainer) {
     console.warn("⚠️ Kein Element mit ID 'ea-legend' gefunden.");
@@ -1086,6 +691,394 @@ document.getElementById("toggle-time-axis").addEventListener("change", (e) => {
 
     });   
   }
+//================================================================================================================================================== EA STATUS DATEN LADEN
+function renderMultiEAStatusTable(dataList) {
+  const openSections = new Set();
+  document.querySelectorAll(".collapsible-toggle").forEach(toggleRow => {
+    const text = toggleRow.textContent;
+    if (text.startsWith("▼")) {
+      const sectionTitle = text.replace(/^▼\s*/, "").trim();
+      openSections.add(sectionTitle);
+    }
+  });
+ 
+  const tableBody = document.querySelector("#payload-table-body");
+  const tableHead = document.querySelector("#payload-table-head");
+  tableBody.innerHTML = "";
+  tableHead.innerHTML = "";
+
+  const fieldOrder = [
+    "symbol", "received_at", "TimeFilterActive", "buy_count", "sell_count", "lotsize", "TPFO", "TP", "SL", "waitmins", "BuyGrid", "SellGrid",
+    "Buy_BB", "Buy_RSI", "Buy_MACD", "Buy_margin",
+    "Buy_maxcount", "Buy_tickmax", "Buy_ATR",
+    "Sell_BB", "Sell_RSI", "Sell_MACD", "Sell_margin",
+    "Sell_maxcount", "Sell_tickmax", "Sell_ATR",
+    "TTPaction", "buyTTP", "sellTTP",
+    "RejectionActiveBuy", "RejectionActiveSell",
+    "AntiGridActiveBuy", "AntiGridActiveSell", "LossLotsActive",
+    "BuyList", "SellList"
+  ];
+  let parameterFieldOrder = [
+  "__basic trading parameters",
+  "lotsize", "LossLotsMultiplicator", "MoneyManagement", "UsedBalance",
+
+  "__time filter parameters",
+  "StopTradingHour", "StopTradingMinute", "StartTradingHour", "StartTradingMinute",
+  "ActivateTimeFilter", "TimeFilterStart1", "TimeFilterOffset1",
+  "TimeFilterStart2", "TimeFilterOffset2",
+  "TimeFilterStart3", "TimeFilterOffset3",
+  "TimeFilterDay1", "TimeFilterDay2",
+
+  "__order parameters",
+  "MaxBuyOrders", "OrderSeries", "OrderSeriesPause",
+  "GridMinDist", "GridMultiplier", "waitminutes",
+  "waitminutesMultiplier", "waitminsnewgrid",
+
+  "__news trading",
+  "ActivateNewsTrading", "usepredefinedevents",
+  "NTminutesbefore", "NTminutesafter", "uniqueEventNamesnumber",
+
+  "__Take Profit parameters",
+  "TakeProfitFirstOrder", "TakeProfitGridOrder", "ActivateDTP",
+  "DTPFirstOrderMultiplier", "DTPGridOrderMultiplier", "DTPbars", "DTPtimeframe",
+  "ActivateTrailingTP", "TrailingTPthresholdFirstOrder", "TrailingTPdistFirstOrder",
+  "TrailingTPthreshold", "TrailingTPdist", "TrailingTPtickDiffThreshold",
+  "swapcorrection", "buyswap", "sellswap", "swapcorrectionhour",
+  "ActivateRejectionTP", "RejectionTP_timeframe", "RejectionRange", "RejectionMax",
+
+  "__Stop Loss parameters",
+  "ActivateStopLoss", "StopLoss", "ActivateAntiGrid",
+  "AntiGridPercentage", "AntiGridLotMultiplicator", "TrailingTPdistAntiGrid",
+  "ActivateStopTime", "closeorders", "closinghours", "CloseOnOppositeSignal",
+
+  "__Bollinger Bands indicator parameters",
+  "ActivateBB", "BB_period", "BB_shift", "BB_deviation",
+  "BB_applied_price", "BB_timeframe",
+
+  "__ATR Grid parameters",
+  "ActivateATRgrid", "atrgrid_period", "atrgrid_timeframe", "ATRGridMultiplier",
+
+  "__ATR Time parameters",
+  "ActivateATRtime", "atrtime_period", "atrtime_timeframe", "ATRwaitminsMultiplier",
+
+  "__ADX indicator parameters",
+  "ActivateADX", "adx_period", "adx_timeframe", "adx_threshold",
+
+  "__RSI indicator parameters",
+  "ActivateRSI", "rsi_period", "rsi_timeframe", "rsi_applied_price", "rsi_deviation",
+
+  "__MACD indicator parameters",
+  "ActivateMACD", "macd_timeframe", "macd_applied_price",
+  "fast_ema_period", "slow_ema_period", "signal_period",
+  "macd_thershold", "ma_period", "ma_timeframe",
+
+  "__Volatility management",
+  "volatilitysleepdays", "ActivateTickMax", "period_SL",
+  "tick_max", "tick_min", "tick_max_order", "tick_Diff_avg_mult", "tick_Diff_bars",
+  "ActivateDoubleBB", "BB2_period", "BB2_deviation", "BB2_applied_price", "BB2_timeframe",
+  "ActivateVolaBB", "BB3_period", "BB3_deviation", "BB3_applied_price", "BB3_timeframe", "BB3diff",
+  "ActivateATRThreshold", "atrTRH_period", "atrTRH_timeframe",
+  "ATRThreshold", "ATRThresholdMax", "ATRThresholdMin", "ATR_avg_mult", "ATRThreshold_bars"
+  ];
+  if (!currentAccountId) {
+    console.warn("⚠️ Kein Account ausgewählt – Tabelle wird nicht angezeigt.");
+    return;
+  }
+ 
+  const latestByComment = {};
+ 
+  dataList.forEach(data => {
+    if (data.account_id !== currentAccountId) return;
+    const comment = data.comment || "unbekannt";    
+    if (!(comment in latestByComment)) {
+      latestByComment[comment] = data;
+    }
+  });
+
+  const eaEntries = Object.entries(latestByComment);
+  eaEntries.sort((a, b) => {
+   const commentA = a[0], commentB = b[0]; 
+   const endsWith = (str, suffix) => str.endsWith(suffix) ? 1 : 0; 
+   const aMR = endsWith(commentA, "MR");     // MR-EAs sollen zuerst, dann TF, dann der Rest
+   const bMR = endsWith(commentB, "MR");
+   if (aMR !== bMR) return bMR - aMR;
+ 
+   const aTF = endsWith(commentA, "TF");
+   const bTF = endsWith(commentB, "TF");
+   if (aTF !== bTF) return bTF - aTF;
+ 
+   // Wenn beides gleich, dann nach TimeFilterActive
+   const aVal = a[1].TimeFilterActive ? 1 : 0;
+   const bVal = b[1].TimeFilterActive ? 1 : 0;
+   return aVal - bVal;
+  });
+
+  const eaNames = eaEntries.map(([name]) => name);
+  eaEntries.forEach(([name, eaData]) => {         // Parameterdaten ergänzen
+    const params = cachedParametersByComment[name];
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (!(key in eaData)) {
+          eaData[key] = value;  // Parameter an das Statusobjekt anhängen
+        }
+      });
+    }
+  });
+   
+  // Tabellenkopf
+  const headRow = document.createElement("tr");
+  headRow.innerHTML = `<th>Parameter</th>` + eaNames.map(name => `<th>${name}</th>`).join("");
+  tableHead.appendChild(headRow);
+  
+  const allFields = [...fieldOrder, ...parameterFieldOrder];
+  let insertedParameterDivider = false;  
+  let currentSectionBody = null;
+  
+  allFields.forEach(field => {
+    // Trennlinie vor Parameterbereich
+    if (!insertedParameterDivider && !fieldOrder.includes(field)) {
+      const dividerRow = document.createElement("tr");
+      dividerRow.innerHTML = `<td colspan="${eaNames.length + 1}" class="table-divider"></td>`;
+      tableBody.appendChild(dividerRow);
+      insertedParameterDivider = true;
+    }
+  
+    // Neue Sektion erkannt → collapsible starten
+    if (field.startsWith("__")) {
+      const sectionTitle = field.slice(2);
+      const sectionClass = `section-${sectionTitle.replace(/\s+/g, "-")}`;
+    
+      const toggleRow = document.createElement("tr");
+      toggleRow.classList.add("collapsible-toggle");
+      let initiallyOpen = openSections.has(sectionTitle);
+    
+      toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">${initiallyOpen ? "▼" : "▶"} ${sectionTitle}</td>`;
+    
+      toggleRow.addEventListener("click", () => {
+        const rows = tableBody.querySelectorAll(`.${sectionClass}`);
+        const isVisible = rows.length && rows[0].style.display !== "none";
+        rows.forEach(row => {
+          row.style.display = isVisible ? "none" : "table-row";
+        });
+        toggleRow.innerHTML = `<td colspan="${eaNames.length + 1}">${isVisible ? "▶" : "▼"} ${sectionTitle}</td>`;
+      });
+    
+      tableBody.appendChild(toggleRow);
+      currentSectionBody = sectionClass;
+    
+      return;
+    }
+   
+    const row = document.createElement("tr");  // Zeile rendern
+
+    // wenn eine Sektion aktiv ist, zuordnen und standardmäßig verstecken
+    if (currentSectionBody) {
+      row.classList.add(currentSectionBody);
+      const sectionTitle = currentSectionBody.replace(/^section-/, "").replace(/-/g, " ");
+      if (!openSections.has(sectionTitle)) {
+        row.style.display = "none";
+      }
+    }
+   
+    row.innerHTML = `<td><strong>${field}</strong></td>`;
+  
+    eaEntries.forEach(([name, eaData]) => {
+     let value = "-";
+     const paramData = cachedParametersByComment[name] || {};
+   
+     if (eaData[field] !== undefined) {
+       if (field === "received_at") {
+         const date = new Date(eaData[field]);
+         const now = new Date();
+         const diffMs = now - date;
+         const diffMin = diffMs / 1000 / 60;
+   
+         const h = String(date.getHours()).padStart(2, '0');
+         const m = String(date.getMinutes()).padStart(2, '0');
+         const s = String(date.getSeconds()).padStart(2, '0');
+         value = `${h}:${m}:${s}`;
+   
+         row.innerHTML += `<td class="${diffMin > 5 ? 'highlight' : ''}">${value}</td>`;
+         return; // ❌ FEHLER: bricht loop zu früh ab → ❗ entfernt
+       } else {
+         value = formatValue(eaData[field]);
+       }
+     } else if (paramData[field] !== undefined) {
+       value = formatValue(paramData[field]);
+     }   
+     row.innerHTML += `<td>${value}</td>`;
+   });
+  
+   tableBody.appendChild(row);
+  });
+}
+
+async function loadMultiEAStatusTable() {
+  const colRef = collection(db, "ea_status");
+  const snapshot = await getDocs(colRef);
+  const dataList = snapshot.docs
+    .map(doc => doc.data())
+    .filter(d => d.account_id === currentAccountId); // 🔧 Nur Daten des aktiven Accounts
+  renderMultiEAStatusTable(dataList);
+}
+
+function watchMultiEAStatusTable() {
+  const colRef = collection(db, "ea_status");
+
+  onSnapshot(colRef, snapshot => {
+    const dataList = snapshot.docs
+      .map(doc => doc.data())
+      .filter(d => d.account_id === currentAccountId); // 🔧 Nur Daten des aktiven Accounts
+
+    renderMultiEAStatusTable(dataList);
+  });
+}
+//================================================================================================================================================== EA PARAMETER DATEN LADEN
+ 
+let cachedParametersByComment = {};
+async function loadEAParameters() {
+  const colRef = collection(db, "ea_parameters");
+  const snapshot = await getDocs(colRef);
+
+  snapshot.docs.forEach(doc => {
+    const data = doc.data();
+    const comment = data.comment;
+    const timestamp = data.timestamp?.seconds || 0;
+
+    if (!cachedParametersByComment[comment] || cachedParametersByComment[comment].timestamp < timestamp) {
+      cachedParametersByComment[comment] = data;
+    }
+  });
+}
+ 
+function extractParameterFieldOrderAndGroups(comment) {
+  const params = cachedParametersByComment[comment];
+  if (!params) return { fieldOrder: [], groupTitles: {} };
+
+  const fieldOrder = [];
+  const groupTitles = {};
+  let currentGroup = null;
+
+  for (const [key, value] of Object.entries(params)) {
+    const groupMatch = key.match(/^parametergruppe\d+$/i);
+    if (groupMatch) {
+      currentGroup = value;
+    } else {
+      if (currentGroup) {
+        groupTitles[key] = currentGroup;
+      }
+      fieldOrder.push(key);
+    }
+  }
+
+  return { fieldOrder, groupTitles };
+} 
+// Optional: Formatierung je nach Typ
+function formatValue(value) {
+  const keyOrder = ["time", "ticket", "volume", "open", "tp", "sl", "swap"];
+
+  if (typeof Timestamp !== "undefined" && value instanceof Timestamp) {
+    return value.toDate().toLocaleString();
+  }
+  if (value === null || value === undefined) return "-";
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return "-";
+    }
+    if (value.length > 0 && typeof value[0] === "object" && value[0] !== null) {
+      // Nach time sortieren (älteste zuerst)
+      value.sort((a, b) => (a.time || 0) - (b.time || 0));
+
+      // Tabellen-Header mit den Keys
+      const headers = keyOrder.map(key => `<th style="padding: 2px 6px; text-align: left;">${key}</th>`).join("");
+
+      // Eine Zeile pro Objekt mit den Werten
+      const rows = value.map(obj => {
+        const cells = keyOrder.map(key => {
+          let val = obj[key];
+
+          // Zeit umwandeln
+          if (key === "time" && typeof val === "number") {
+            val = new Date(val * 1000).toLocaleString();
+          }
+
+          // Boolean in Emoji
+          if (typeof val === "boolean") {
+            val = val ? "✅" : "❌";
+          }
+
+          return `<td style="padding: 2px 6px;">${val !== undefined ? val : ""}</td>`;
+        }).join("");
+        return `<tr>${cells}</tr>`;
+      }).join("");
+
+      // Komplettes Table innerhalb von <details>
+      return `
+      <button onclick='openModal(\`${generateTableHTML(value)}\`)' style="font-size:0.8em; cursor:pointer;">🗂️ Details anzeigen</button>
+      `;
+    }
+
+    // Arrays von Arrays oder einfachen Werten
+    return value.map(row => {
+      if (Array.isArray(row)) {
+        return "[" + row.map(v => String(v)).join(", ") + "]";
+      }
+      if (typeof row === "boolean") {
+        return row ? "✅" : "❌";
+      }
+      return String(row);
+    }).join("<br>");
+  }
+
+  // Einzelne Objekte
+  if (typeof value === "object" && value !== null) {
+    return JSON.stringify(value);
+  }
+
+  // Einzelner Boolean
+  if (typeof value === "boolean") {
+    return value ? "✅" : "❌";
+  }
+
+  return String(value);
+}
+  function generateTableHTML(value) {
+   const keyOrder = ["time", "ticket", "volume", "open", "tp", "sl", "swap"];
+ 
+   value.sort((a, b) => (a.time || 0) - (b.time || 0));
+   const headers = keyOrder.map(key => `<th style="padding: 2px 6px; text-align: left;">${key}</th>`).join("");
+ 
+   const rows = value.map(obj => {
+     const cells = keyOrder.map(key => {
+       let val = obj[key];
+       if (key === "time" && typeof val === "number") val = new Date(val * 1000).toLocaleString();
+       if (typeof val === "boolean") val = val ? "✅" : "❌";
+       return `<td style="padding: 2px 6px;">${val !== undefined ? val : ""}</td>`;
+     }).join("");
+     return `<tr>${cells}</tr>`;
+   }).join("");
+ 
+   return `
+     <table style="border-collapse: collapse; font-size: 0.85em; margin-top: 4px;">
+       <thead><tr>${headers}</tr></thead>
+       <tbody>${rows}</tbody>
+     </table>`;
+ }
+   function openModal(contentHtml) {
+    const overlay = document.getElementById("modal-overlay");
+    const body = document.getElementById("modal-body");
+    body.innerHTML = contentHtml;
+    overlay.style.display = "block";
+  }
+  
+  function closeModal() {
+    document.getElementById("modal-overlay").style.display = "none";
+  }
+   // Wichtig: Funktionen global machen
+  window.openModal = openModal;
+  window.closeModal = closeModal;
+
+ 
  //================================================================================================================================================= LOGS LADEN
 async function loadEAMessages(selectedEA = "") {
   const colRef = collection(db, "ea_messages");
