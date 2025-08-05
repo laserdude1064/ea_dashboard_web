@@ -351,8 +351,10 @@ portfolioChart = new Chart(ctx, {
         ticks: useTimeAxis
           ? {
               autoSkip: false,
+              source: "data",
               callback: function (value, index, ticks) {
-                const date = new Date(value);
+                const ts = this.getLabelForValue(value);
+                const date = new Date(ts);
                 const minutes = date.getMinutes();
                 if (minutes === 0 || minutes === 30) {
                   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -377,7 +379,7 @@ portfolioChart = new Chart(ctx, {
               stepSize: 1
             }
           : undefined
-      },
+       },
       y: {
         type: "linear",
         position: "left",
