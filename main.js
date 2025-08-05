@@ -11,7 +11,7 @@ const accountNames = {
   "707947": "Marcel live - 707947"
   // weitere Einträge…
 };
-
+ 
 document.addEventListener("DOMContentLoaded", () => {
   // Firebase Setup
   const firebaseConfig = {
