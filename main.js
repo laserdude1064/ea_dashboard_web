@@ -1065,18 +1065,17 @@ async function loadEAMessages(selectedEA = "") {
 
   const logList = document.getElementById("log-list");
   const filterSelect = document.getElementById("log-filter");
-
   logList.innerHTML = "";
 
   const allComments = new Set();
-
-  // ❗️Aktuelle Auswahl merken
   const previousSelection = filterSelect.value;
 
-  // Filter zurücksetzen (alles außer "Alle EAs" entfernen)
-  for (let i = filterSelect.options.length - 1; i > 0; i--) {
-    filterSelect.remove(i);
-  }
+  // Filter zurücksetzen
+  filterSelect.innerHTML = "";
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "__ALL__";
+  defaultOption.textContent = "Alle EAs";
+  filterSelect.appendChild(defaultOption);
 
   snapshot.forEach(doc => {
     const data = doc.data();
@@ -1085,9 +1084,7 @@ async function loadEAMessages(selectedEA = "") {
     const messages = data.messages || [];
 
     if (accountId !== currentAccountId) return;
-
     allComments.add(comment);
-
     if (selectedEA && selectedEA !== comment) return;
 
     messages.forEach(msg => {
@@ -1097,7 +1094,6 @@ async function loadEAMessages(selectedEA = "") {
     });
   });
 
-  // Dropdown neu befüllen
   allComments.forEach(comment => {
     const opt = document.createElement("option");
     opt.value = comment;
@@ -1105,15 +1101,15 @@ async function loadEAMessages(selectedEA = "") {
     filterSelect.appendChild(opt);
   });
 
-  // ❗️Zuvor gewählte Option wiederherstellen (falls vorhanden)
-  if (previousSelection) {
-    filterSelect.value = previousSelection;
-  }
+  // Auswahl wiederherstellen oder auf "Alle EAs" zurücksetzen
+  filterSelect.value = previousSelection || "__ALL__";
 }
+
 document.getElementById("log-filter").addEventListener("change", (e) => {
   const selected = e.target.value;
-  loadEAMessages(selected === "all" ? "" : selected);
+  loadEAMessages(selected === "__ALL__" ? "" : selected);
 });
+
 
 
 });
