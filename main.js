@@ -97,38 +97,36 @@ if (logoutButton) {
   });
 }
 
- // Auth State beobachten 
+ // Auth State beobachten
 onAuthStateChanged(auth, async (user) => {
- if (user) {
-   loginSection.style.display = "none";
-   contentSection.style.display = "block";
-   showTab(3);
+  if (!user) {
+    loginSection.style.display = "block";
+    contentSection.style.display = "none";
+    return;
+  }
 
-   await loadAvailableAccounts(); // setzt accountSelect Optionen
-   currentAccountId = accountSelect.value;
+  loginSection.style.display = "none";
+  contentSection.style.display = "block";
+  showTab(3);
 
-   if (!accountListenerSet) {
-     accountSelect.addEventListener("change", () => {
-       currentAccountId = accountSelect.value;
-       fetchData();
-       fetchTradeHistory();
-       loadMultiEAStatusTable();
-       loadEAParameters();
-       loadEAMessages();
-     });
-     accountListenerSet = true;
-   }
+  await loadAvailableAccounts();
+  currentAccountId = accountSelect.value;
 
-   fetchData();
-   fetchTradeHistory();
-   loadMultiEAStatusTable();
-   watchMultiEAStatusTable();
-   loadEAParameters();
-   loadEAMessages();
- } else {
-   loginSection.style.display = "block";
-   contentSection.style.display = "none";
- }
+  // Account-Auswahl nur einmal verbinden
+  if (!accountListenerSet) {
+    accountSelect.addEventListener("change", () => {
+      currentAccountId = accountSelect.value;
+      reloadAllAccountData();
+    });
+    accountListenerSet = true;
+  }
+
+  // Initialdaten laden
+  reloadAllAccountData();
+
+  // Listener setzen (einmalig)
+  watchMultiEAStatusTable();
+  watchEAMessages();
 });
 
 // Login Funktion für HTML-Zugriff (wird derzeit nicht genutzt)
@@ -165,6 +163,13 @@ async function loadAvailableAccounts() {
    currentAccountId = accountSelect.value;
  }
 } 
+function reloadAllAccountData() {
+  fetchData();
+  fetchTradeHistory();
+  loadMultiEAStatusTable();
+  loadEAParameters();
+  loadEAMessages();
+}
 
   // ========================================================================================================================== Monitoring-Daten laden ============ 
 
@@ -1110,6 +1115,25 @@ document.getElementById("log-filter").addEventListener("change", (e) => {
   loadEAMessages(selected === "__ALL__" ? "" : selected);
 });
 
+function watchEAMessages() {
+ const colRef = collection(db, "ea_messages");
+
+ onSnapshot(colRef, snapshot => {
+   let relevantChange = false;
+
+   snapshot.docChanges().forEach(change => {
+     const data = change.doc.data();
+     if (data.account_id === currentAccountId) {
+       relevantChange = true;
+     }
+   });
+
+   if (relevantChange) {
+     const selected = document.getElementById("log-filter")?.value || "__ALL__";
+     loadEAMessages(selected === "__ALL__" ? "" : selected);
+   }
+ });
+}
 
 
 });
