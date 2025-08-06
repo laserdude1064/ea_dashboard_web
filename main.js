@@ -1106,10 +1106,19 @@ async function loadEAMessages(selectedEA = "") {
   });
 
   // Nach Zeitstempel sortieren
-  messagesToDisplay.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+  messagesToDisplay.sort((a, b) => b.sortKey.localeCompare(a.sortKey));
    
-  // Logs einfügen
-  messagesToDisplay.forEach(({ comment, fullMessage }) => {
+  // Logs einfügen mit Datumstrenner
+  let lastDate = null;
+  messagesToDisplay.forEach(({ comment, fullMessage, baseDate }) => {
+    if (baseDate !== lastDate) {
+      const hr = document.createElement("hr");
+      hr.style.border = "1px solid black";
+      hr.style.margin = "10px 0";
+      logList.appendChild(hr);
+      lastDate = baseDate;
+    }
+
     const li = document.createElement("li");
     li.textContent = `[${comment}] ${fullMessage}`;
     logList.appendChild(li);
