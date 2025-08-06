@@ -1082,7 +1082,6 @@ async function loadEAMessages(selectedEA = "") {
   defaultOption.textContent = "Alle EAs";
   filterSelect.appendChild(defaultOption);
 
- 
   const messagesToDisplay = [];
   
   snapshot.forEach(doc => {
@@ -1102,7 +1101,7 @@ async function loadEAMessages(selectedEA = "") {
       const match = msg.match(/^(\d{2}:\d{2}:\d{2})/); // Zeit extrahieren
       const timeStr = match ? match[1] : "00:00:00";
       const sortKey = `${baseDate}T${timeStr}`;
-      messagesToDisplay.push({ comment, msg, sortKey })
+      messagesToDisplay.push({ comment, fullMessage: `${baseDate} ${msg}`, sortKey });
     });
   });
 
@@ -1110,9 +1109,9 @@ async function loadEAMessages(selectedEA = "") {
   messagesToDisplay.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
    
   // Logs einfügen
-  messagesToDisplay.forEach(({ comment, msg }) => {
+  messagesToDisplay.forEach(({ comment, fullMessage }) => {
     const li = document.createElement("li");
-    li.textContent = `[${comment}] ${msg}`;
+    li.textContent = `[${comment}] ${fullMessage}`;
     logList.appendChild(li);
   });
 
