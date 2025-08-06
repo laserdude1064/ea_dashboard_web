@@ -692,7 +692,7 @@ function renderMultiEAStatusTable(dataList) {
     "Buy_maxcount", "Buy_tickmax", "Buy_ATR",
     "Sell_BB", "Sell_RSI", "Sell_MACD", "Sell_margin",
     "Sell_maxcount", "Sell_tickmax", "Sell_ATR",
-    "TTPaction", "buyTTP", "sellTTP",
+    "buyTTP", "sellTTP",
     "RejectionActiveBuy", "RejectionActiveSell",
     "AntiGridActiveBuy", "AntiGridActiveSell", "LossLotsActive",
     "BuyList", "SellList"
