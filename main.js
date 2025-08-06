@@ -1090,27 +1090,24 @@ async function loadEAMessages(selectedEA = "") {
     const comment = data.comment || "Unbekannt";
     const accountId = data.account_id || "";
     const messages = data.messages || [];
+    const updatedAt = data.updated_at || null;
 
     if (accountId !== currentAccountId) return;
     allComments.add(comment);
     if (selectedEA && selectedEA !== comment) return;
 
-   messages.forEach(msg => {
+    const baseDate = updatedAt ? new Date(updatedAt).toISOString().split("T")[0] : "1970-01-01";
+   
+    messages.forEach(msg => {
       const match = msg.match(/^(\d{2}:\d{2}:\d{2})/); // Zeit extrahieren
       const timeStr = match ? match[1] : "00:00:00";
-      messagesToDisplay.push({ comment, msg, timeStr });
+      const sortKey = `${baseDate}T${timeStr}`;
+      messagesToDisplay.push({ comment, msg, sortKey })
     });
   });
 
-  allComments.forEach(comment => {
-    const opt = document.createElement("option");
-    opt.value = comment;
-    opt.textContent = comment;
-    filterSelect.appendChild(opt);
-  });
-
   // Nach Zeitstempel sortieren
-  messagesToDisplay.sort((a, b) => a.timeStr.localeCompare(b.timeStr));
+  messagesToDisplay.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
    
   // Logs einfügen
   messagesToDisplay.forEach(({ comment, msg }) => {
