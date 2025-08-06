@@ -1075,13 +1075,16 @@ async function loadEAMessages(selectedEA = "") {
   const allComments = new Set();
   const previousSelection = filterSelect.value;
 
-  // Filter zurücksetzen
+  // dropdown menu zurücksetzen
   filterSelect.innerHTML = "";
   const defaultOption = document.createElement("option");
   defaultOption.value = "__ALL__";
   defaultOption.textContent = "Alle EAs";
   filterSelect.appendChild(defaultOption);
 
+ 
+  const messagesToDisplay = [];
+  
   snapshot.forEach(doc => {
     const data = doc.data();
     const comment = data.comment || "Unbekannt";
@@ -1092,10 +1095,10 @@ async function loadEAMessages(selectedEA = "") {
     allComments.add(comment);
     if (selectedEA && selectedEA !== comment) return;
 
-    messages.forEach(msg => {
-      const li = document.createElement("li");
-      li.textContent = `[${comment}] ${msg}`;
-      logList.appendChild(li);
+   messages.forEach(msg => {
+      const match = msg.match(/^(\d{2}:\d{2}:\d{2})/); // Zeit extrahieren
+      const timeStr = match ? match[1] : "00:00:00";
+      messagesToDisplay.push({ comment, msg, timeStr });
     });
   });
 
@@ -1106,6 +1109,24 @@ async function loadEAMessages(selectedEA = "") {
     filterSelect.appendChild(opt);
   });
 
+  // Nach Zeitstempel sortieren
+  messagesToDisplay.sort((a, b) => a.timeStr.localeCompare(b.timeStr));
+   
+  // Logs einfügen
+  messagesToDisplay.forEach(({ comment, msg }) => {
+    const li = document.createElement("li");
+    li.textContent = `[${comment}] ${msg}`;
+    logList.appendChild(li);
+  });
+
+  // Dropdown befüllen
+  allComments.forEach(comment => {
+    const opt = document.createElement("option");
+    opt.value = comment;
+    opt.textContent = comment;
+    filterSelect.appendChild(opt);
+  });
+ 
   // Auswahl wiederherstellen oder auf "Alle EAs" zurücksetzen
   filterSelect.value = previousSelection || "__ALL__";
 }
