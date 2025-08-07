@@ -1089,19 +1089,18 @@ async function loadEAMessages(selectedEA = "") {
     const comment = data.comment || "Unbekannt";
     const accountId = data.account_id || "";
     const messages = data.messages || [];
-    const updatedAt = data.updated_at || null;
 
     if (accountId !== currentAccountId) return;
     allComments.add(comment);
     if (selectedEA && selectedEA !== comment) return;
-
-    const baseDate = updatedAt ? new Date(updatedAt).toISOString().split("T")[0] : "1970-01-01";
    
     messages.forEach(msg => {
-      const match = msg.match(/^(\d{2}:\d{2}:\d{2})/); // Zeit extrahieren
-      const timeStr = match ? match[1] : "00:00:00";
+      // Format: "JJ-MM-TT HH:MM:SS -> Nachricht"
+      const match = msg.match(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})/);
+      const baseDate = match ? match[1] : "1970-01-01";
+      const timeStr = match ? match[2] : "00:00:00";
       const sortKey = `${baseDate}T${timeStr}`;
-      messagesToDisplay.push({ comment, fullMessage: `${baseDate} ${msg}`, sortKey });
+      messagesToDisplay.push({ comment, fullMessage: msg, baseDate, sortKey });
     });
   });
 
