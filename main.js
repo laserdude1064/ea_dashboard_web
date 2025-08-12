@@ -694,9 +694,9 @@ function renderMultiEAStatusTable(dataList) {
   const fieldOrder = [
     "symbol", "received_at", "TimeFilterActive", "NoTrade", "buy_count", "sell_count", "lotsize", "TPFO", "TP", "SL", "waitmins", "BuyGrid", "SellGrid",
     "Buy_BB", "Buy_RSI", "Buy_MACD", "Buy_margin",
-    "Buy_maxcount", "Buy_tickmax", "Buy_ATR",
+    "Buy_maxcount", "Buy_tickmax", "Buy_ATR", "Buy_waitminsbuy", "Buy_waitminssell",
     "Sell_BB", "Sell_RSI", "Sell_MACD", "Sell_margin",
-    "Sell_maxcount", "Sell_tickmax", "Sell_ATR",
+    "Sell_maxcount", "Sell_tickmax", "Sell_ATR", "Sell_waitminsbuy", "Sell_waitminssell",
     "buyTTP", "sellTTP",
     "RejectionActiveBuy", "RejectionActiveSell",
     "AntiGridActiveBuy", "AntiGridActiveSell", "LossLotsActive",
