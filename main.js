@@ -328,7 +328,7 @@ async function fetchData() {
           title: { display: true, text: xTitle },
           ticks: useTimeAxis
             ? {
-                autoSkip: false,
+                autoSkip: true,
                 source: "data",
                 callback: function (value) {
                   const ts = this.getLabelForValue(value);
