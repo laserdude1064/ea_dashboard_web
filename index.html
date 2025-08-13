@@ -61,10 +61,13 @@
           <input type="checkbox" id="toggle-archive-data" />
           Archivierte Daten anzeigen
         </label>
-        <label>
-          <input type="checkbox" id="toggle-resolution" />
-          minutengenaue Daten anzeigen
-        </label>
+        <div style="margin-bottom: 1rem;">
+          <label for="resolution-filter"><strong>Datenauflösung ändern:</strong></label>
+          <select id="resolution-filter">
+            <option value="__ALL__">1 min</option>
+            <!-- Dynamisch befüllt -->
+          </select>
+        </div>
         <table id="stats-monitoring" border="1">
           <thead>
             <tr>
