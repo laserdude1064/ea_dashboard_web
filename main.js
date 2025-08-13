@@ -385,7 +385,11 @@ document.getElementById("toggle-time-axis-live")?.addEventListener("change", asy
 document.getElementById("toggle-archive-data")?.addEventListener("change", async () => {
   await fetchData();
 });
-
+ 
+// 🔹 NEU: Dropdown-Event für Auflösung
+document.getElementById("resolution-filter")?.addEventListener("change", async () => {
+  await fetchData();
+});
  //================================================================================================================================= HISTORISCHE TRADE DATEN LADEN
 async function fetchTradeHistory() {
   if (!currentAccountId) {
