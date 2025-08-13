@@ -262,6 +262,24 @@ async function fetchData() {
   }
 
   dataList.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+
+   // 🔹 NEU: Auflösung aus Dropdown auslesen
+  const resolutionValue = document.getElementById("resolution-filter")?.value || "__ALL__";
+  if (resolutionValue !== "__ALL__") {
+    const stepMinutes = parseInt(resolutionValue, 10);
+    let lastTs = 0;
+    const filtered = [];
+    dataList.forEach(d => {
+      const ts = new Date(d.timestamp).getTime();
+      if (ts - lastTs >= stepMinutes * 60000) {
+        filtered.push(d);
+        lastTs = ts;
+      }
+    });
+    dataList.length = 0;
+    dataList.push(...filtered);
+  }
+ 
   const equity = dataList.map(d => d.equity);
   const balance = dataList.map(d => d.balance);
   const drawdown = dataList.map(d => d.drawdown);
