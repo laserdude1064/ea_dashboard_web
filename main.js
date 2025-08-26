@@ -934,6 +934,7 @@ function watchMultiEAStatusTable() {
  
 let cachedParametersByComment = {};
 async function loadEAParameters() {
+  cachedParametersByComment = {};
   console.log("Lade Daten aus 'ea_parameters' für Account:", currentAccountId);
   const colRef = collection(db, "ea_parameters");
   const snapshot = await getDocs(colRef);
