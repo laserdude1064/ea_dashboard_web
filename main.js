@@ -939,8 +939,11 @@ async function loadEAParameters() {
 
   snapshot.docs.forEach(doc => {
     const data = doc.data();
+    if (data.account_id !== currentAccountId) {
+      return; // 🚫 Ignoriere fremde Konten
+    }
     const comment = data.comment;
-    const timestamp = data.timestamp?.seconds || 0;
+    const timestamp = data.received_at || 0;
 
     if (!cachedParametersByComment[comment] || cachedParametersByComment[comment].timestamp < timestamp) {
       cachedParametersByComment[comment] = data;
