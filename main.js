@@ -279,17 +279,23 @@ async function fetchData() {
     dataList.length = 0;
     dataList.push(...filtered);
   }
- 
+
+  const useTimeAxis = document.getElementById("toggle-time-axis-live")?.checked ?? false;
+
+  // 🔹 Daten vorbereiten
   const equity = dataList.map(d => d.equity);
   const balance = dataList.map(d => d.balance);
   const drawdown = dataList.map(d => d.drawdown);
+  const filteredDrawdown = drawdown.map(d => (d >= 0 ? d : 0));
+
   const timestamps = dataList.map(d => d.timestamp);
   const indexLabels = equity.map((_, i) => i);
 
-  const useTimeAxis = document.getElementById("toggle-time-axis-live")?.checked ?? false;
-  const labels = useTimeAxis ? timestamps : indexLabels;
-  const xScaleType = useTimeAxis ? "time" : "linear";
-  const xTitle = useTimeAxis ? "Zeit" : "Index";
+  // ❗ Umschalten zwischen Index und Zeit
+  const labels = useTimeAxis ? undefined : indexLabels;
+  const equityData = useTimeAxis ? dataList.map(d => ({ x: d.timestamp, y: d.equity })) : equity;
+  const balanceData = useTimeAxis ? dataList.map(d => ({ x: d.timestamp, y: d.balance })) : balance;
+  const drawdownData = useTimeAxis ? dataList.map(d => ({ x: d.timestamp, y: d.drawdown >= 0 ? d.drawdown : 0 })) : filteredDrawdown;
 
   const ctx = document.getElementById("chart").getContext("2d");
 
@@ -303,17 +309,15 @@ async function fetchData() {
     return max + Math.abs(max * paddingFactor);
   }
 
-  const filteredDrawdown = drawdown.map(d => (d >= 0 ? d : 0));
-
-  if (portfolioChart) portfolioChart.destroy();
+ if (portfolioChart) portfolioChart.destroy();
   portfolioChart = new Chart(ctx, {
     type: "bar",
     data: {
       labels,
       datasets: [
-        { type: "line", label: "Equity", data: equity, borderColor: "rgb(75, 192, 192)", tension: 0.1, yAxisID: "y" },
-        { type: "line", label: "Balance", data: balance, borderColor: "rgb(192, 75, 192)", tension: 0.1, yAxisID: "y" },
-        { type: "bar", label: "Drawdown (%)", data: filteredDrawdown, backgroundColor: "rgba(255, 99, 132, 0.5)", borderColor: "rgb(255, 99, 132)", yAxisID: "y1" }
+        { type: "line", label: "Equity", data: equityData, borderColor: "rgb(75, 192, 192)", tension: 0.1, yAxisID: "y" },
+        { type: "line", label: "Balance", data: balanceData, borderColor: "rgb(192, 75, 192)", tension: 0.1, yAxisID: "y" },
+        { type: "bar", label: "Drawdown (%)", data: drawdownData, backgroundColor: "rgba(255, 99, 132, 0.5)", borderColor: "rgb(255, 99, 132)", yAxisID: "y1" }
       ]
     },
     options: {
@@ -323,38 +327,22 @@ async function fetchData() {
         legend: { position: "top" }
       },
       scales: {
-        x: {
-          type: xScaleType,
-          title: { display: true, text: xTitle },
-          ticks: useTimeAxis
-            ? {
-                autoSkip: true,
-                source: "data",
-                callback: function (value) {
-                  const ts = this.getLabelForValue(value);
-                  const date = new Date(ts);
-                  const minutes = date.getMinutes();
-                  return (minutes === 0 || minutes === 30)
-                    ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    : "";
-                }
-              }
-            : { stepSize: 1 },
-          time: useTimeAxis
-            ? {
+        x: useTimeAxis
+          ? {
+              type: "time",
+              title: { display: true, text: "Zeit" },
+              time: {
                 tooltipFormat: "dd.MM.yyyy HH:mm",
-                displayFormats: {
-                  millisecond: "HH:mm",
-                  second: "HH:mm",
-                  minute: "HH:mm",
-                  hour: "HH:mm",
-                  day: "dd.MM"
-                },
-                unit: "minute",
-                stepSize: 1
-              }
-            : undefined
-        },
+                displayFormats: { minute: "HH:mm", hour: "HH:mm", day: "dd.MM" },
+                unit: "minute"
+              },
+              ticks: { autoSkip: true, source: "data" }
+            }
+          : {
+              type: "linear",
+              title: { display: true, text: "Index" },
+              ticks: { stepSize: 1 }
+            },
         y: {
           type: "linear",
           position: "left",
@@ -375,8 +363,11 @@ async function fetchData() {
       }
     }
   });
+
   updateMonitoringStats(equity, balance, drawdown);
 }
+
+
 
 document.getElementById("toggle-time-axis-live")?.addEventListener("change", async () => {
   await fetchData();  // ruft den Chart mit neuer Achsen-Option neu auf
