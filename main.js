@@ -946,10 +946,9 @@ async function loadEAParameters() {
     const comment = data.comment;
     const timestamp = data.received_at || 0;
 
-    if (!cachedParametersByComment[comment] || cachedParametersByComment[comment].timestamp < timestamp) {
-      cachedParametersByComment[comment] = data;
-      console.log("daten für ", currentAccountId, " hinzugefügt");
-    }
+    cachedParametersByComment[comment] = data;
+    console.log("daten für ", currentAccountId, " hinzugefügt");
+    
   });
 }
  
