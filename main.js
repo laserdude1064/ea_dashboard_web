@@ -934,6 +934,7 @@ function watchMultiEAStatusTable() {
  
 let cachedParametersByComment = {};
 async function loadEAParameters() {
+  console.log("Lade Daten aus 'ea_parameters' für Account:", currentAccountId);
   const colRef = collection(db, "ea_parameters");
   const snapshot = await getDocs(colRef);
 
@@ -947,6 +948,7 @@ async function loadEAParameters() {
 
     if (!cachedParametersByComment[comment] || cachedParametersByComment[comment].timestamp < timestamp) {
       cachedParametersByComment[comment] = data;
+      console.log("daten für ", currentAccountId, " hinzugefügt");
     }
   });
 }
