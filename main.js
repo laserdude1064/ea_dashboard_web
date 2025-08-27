@@ -898,10 +898,10 @@ function renderMultiEAStatusTable(dataList) {
          const m = String(date.getMinutes()).padStart(2, '0');
          const s = String(date.getSeconds()).padStart(2, '0');
      
-         // zweizeilig: oben Datum, unten Zeit
-         value = `${d}.${mo}.${y}<br>${h}:${m}:${s}`;
+         const value = `${d}.${mo}.${y}<br>${h}:${m}:${s}`;
      
          row.innerHTML += `<td class="${diffMin > 5 ? 'highlight' : ''}">${value}</td>`;
+         continue; // ✅ wichtig: nicht nochmal unten verarbeiten     
      } else {
          value = formatValue(eaData[field]);
      }
