@@ -140,29 +140,45 @@ window.login = async function () {
     document.getElementById("login-error").textContent = "❌ Login fehlgeschlagen: " + error.message;
   }
 };
-
+ 
 async function loadAvailableAccounts() {
- const snapshot = await getDocs(collection(db, "ea_monitoring"));
- const accounts = new Set();
+  const snapshot = await getDocs(collection(db, "ea_monitoring"));
+  const accounts = new Set();
 
- snapshot.forEach(doc => {
-  const accountId = doc.id;            // Doc-ID ist Account-ID
-  accounts.add(accountId);
- });
+  snapshot.forEach(doc => {
+    const accountId = doc.id; // Doc-ID ist Account-ID
+    accounts.add(accountId);
+  });
 
- accountSelect.innerHTML = ""; // Reset
- Array.from(accounts).sort().forEach(acc => {
-   const option = document.createElement("option");
-   option.value = acc;
-   option.textContent = accountNames[acc] || acc; // Mapping oder ID anzeigen
-   accountSelect.appendChild(option);
- });
+  accountSelect.innerHTML = ""; // Reset
 
- // Setze ersten Account als aktiv
- if (accounts.size > 0) {
-   currentAccountId = accountSelect.value;
- }
-} 
+  // Eric live ID festlegen
+  const preferred = "707838";
+
+  // Accounts sortieren, aber Eric live nach vorne schieben
+  const sorted = Array.from(accounts).sort((a, b) => {
+    if (a === preferred) return -1;
+    if (b === preferred) return 1;
+    return a.localeCompare(b);
+  });
+
+  sorted.forEach(acc => {
+    const option = document.createElement("option");
+    option.value = acc;
+    option.textContent = accountNames[acc] || acc;
+    accountSelect.appendChild(option);
+  });
+
+  // Eric live als Default auswählen, wenn vorhanden
+  if (accounts.has(preferred)) {
+    accountSelect.value = preferred;
+    currentAccountId = preferred;
+  } else if (sorted.length > 0) {
+    accountSelect.value = sorted[0];
+    currentAccountId = sorted[0];
+  }
+}
+
 function reloadAllAccountData() {
   fetchData();
   fetchTradeHistory();
