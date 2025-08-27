@@ -705,7 +705,7 @@ function renderMultiEAStatusTable(dataList) {
   tableHead.innerHTML = "";
 
   const fieldOrder = [
-    "symbol", "received_at", "TimeFilterActive", "NoTrade", "buy_count", "sell_count", "lotsize", "TPFO", "TP", "SL", "risk", "waitmins", "BuyGrid", "SellGrid",
+    "symbol", "received_at", "TimeFilterActive", "NoTrade", "buy_count", "sell_count", "lotsize", "TPFO", "TP", "SL", "risk_euro", "risk_percent", "waitmins", "BuyGrid", "SellGrid",
     "Buy_BB", "Buy_RSI", "Buy_MACD", "Buy_margin",
     "Buy_maxcount", "Buy_tickmax", "Buy_ATR", "Buy_waitminsbuy", "Buy_waitminssell",
     "Sell_BB", "Sell_RSI", "Sell_MACD", "Sell_margin",
