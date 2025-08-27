@@ -900,7 +900,7 @@ function renderMultiEAStatusTable(dataList) {
      
          const value = `${d}.${mo}.${y}<br>${h}:${m}:${s}`;
 
-         row.innerHTML += `<td class="${diffMin > 5 ? 'highlight' : ''}">${value}</td>`;
+         row.innerHTML += `<td class="${diffMin > 1440 ? 'highlight' : ''}">${value}</td>`;
          return; // ❌ FEHLER: bricht loop zu früh ab → ❗ entfernt   
      } else {
          value = formatValue(eaData[field]);
