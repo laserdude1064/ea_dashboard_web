@@ -5,9 +5,9 @@ import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from
 console.log("📡 main.js geladen");
 
 const accountNames = {
-  "40493": "Demo1 - 40493",
-  "40496": "Demo2 - 40496",
   "707838": "Eric live - 707838",
+  "40493": "Demo1 - 40493",
+  "40496": "Demo2 - 40496",  
   "707947": "Marcel live - 707947"
   // weitere Einträge…
 };
