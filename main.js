@@ -884,22 +884,27 @@ function renderMultiEAStatusTable(dataList) {
      const paramData = cachedParametersByComment[name] || {};
    
      if (eaData[field] !== undefined) {
-       if (field === "received_at") {
+     if (field === "received_at") {
          const date = new Date(eaData[field]);
          const now = new Date();
          const diffMs = now - date;
          const diffMin = diffMs / 1000 / 60;
-   
+     
+         const d = String(date.getDate()).padStart(2, '0');
+         const mo = String(date.getMonth() + 1).padStart(2, '0');
+         const y = date.getFullYear();
+     
          const h = String(date.getHours()).padStart(2, '0');
          const m = String(date.getMinutes()).padStart(2, '0');
          const s = String(date.getSeconds()).padStart(2, '0');
-         value = `${h}:${m}:${s}`;
-   
+     
+         // zweizeilig: oben Datum, unten Zeit
+         value = `${d}.${mo}.${y}<br>${h}:${m}:${s}`;
+     
          row.innerHTML += `<td class="${diffMin > 5 ? 'highlight' : ''}">${value}</td>`;
-         return; // ❌ FEHLER: bricht loop zu früh ab → ❗ entfernt
-       } else {
+     } else {
          value = formatValue(eaData[field]);
-       }
+     }
      } else if (paramData[field] !== undefined) {
        value = formatValue(paramData[field]);
      }   
