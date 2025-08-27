@@ -899,8 +899,8 @@ function renderMultiEAStatusTable(dataList) {
          const s = String(date.getSeconds()).padStart(2, '0');
      
          const value = `${d}.${mo}.${y}<br>${h}:${m}:${s}`;
-     
-         row.innerHTML += <td class="${diffMin > 5 ? 'highlight' : ''}">${value}</td>;
+
+         row.innerHTML += `<td class="${diffMin > 5 ? 'highlight' : ''}">${value}</td>`;
          return; // ❌ FEHLER: bricht loop zu früh ab → ❗ entfernt   
      } else {
          value = formatValue(eaData[field]);
