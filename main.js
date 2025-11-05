@@ -943,7 +943,7 @@ async function loadMultiEAStatusTable() {
 function watchMultiEAStatusTable() {
   const colRef = collection(db, "ea_status");
 
-  onSnapshot(colRef, snapshot => {
+  onSnapshot(colRef, async (snapshot) => {
     await loadEAParameters();
     const dataList = snapshot.docs
       .map(doc => doc.data())
