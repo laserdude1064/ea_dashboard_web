@@ -182,7 +182,7 @@ async function loadAvailableAccounts() {
 function reloadAllAccountData() {
   fetchData();
   fetchTradeHistory();
-  loadEAParameters();
+  
   loadMultiEAStatusTable();  
   loadEAMessages();
 }
@@ -932,6 +932,7 @@ function renderMultiEAStatusTable(dataList) {
 }
 
 async function loadMultiEAStatusTable() {
+  loadEAParameters();
   const colRef = collection(db, "ea_status");
   const snapshot = await getDocs(colRef);
   const dataList = snapshot.docs
