@@ -181,8 +181,7 @@ async function loadAvailableAccounts() {
 
 function reloadAllAccountData() {
   fetchData();
-  fetchTradeHistory();
-  
+  fetchTradeHistory();  
   loadMultiEAStatusTable();  
   loadEAMessages();
 }
@@ -932,7 +931,7 @@ function renderMultiEAStatusTable(dataList) {
 }
 
 async function loadMultiEAStatusTable() {
-  loadEAParameters();
+  await loadEAParameters();
   const colRef = collection(db, "ea_status");
   const snapshot = await getDocs(colRef);
   const dataList = snapshot.docs
@@ -945,10 +944,10 @@ function watchMultiEAStatusTable() {
   const colRef = collection(db, "ea_status");
 
   onSnapshot(colRef, snapshot => {
+    await loadEAParameters();
     const dataList = snapshot.docs
       .map(doc => doc.data())
       .filter(d => d.account_id === currentAccountId); // 🔧 Nur Daten des aktiven Accounts
-
     renderMultiEAStatusTable(dataList);
   });
 }
