@@ -182,8 +182,8 @@ async function loadAvailableAccounts() {
 function reloadAllAccountData() {
   fetchData();
   fetchTradeHistory();
-  loadMultiEAStatusTable();
-  loadEAParameters();
+  await loadEAParameters();
+  loadMultiEAStatusTable();  
   loadEAMessages();
 }
 
